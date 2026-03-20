@@ -3,9 +3,18 @@ import type { VideoFile } from '../types'
 
 interface VideoListProps {
   videos: VideoFile[]
+  loading: boolean
 }
 
 const VideoList: Component<VideoListProps> = props => {
+  if (props.loading) {
+    return (
+      <div class="flex items-center justify-center h-full text-gray-400 text-sm">
+        Scanning...
+      </div>
+    )
+  }
+
   if (props.videos.length === 0) {
     return (
       <div class="flex items-center justify-center h-full text-gray-400 text-sm">
@@ -23,13 +32,8 @@ const VideoList: Component<VideoListProps> = props => {
               <div class="truncate text-sm font-medium text-gray-900">
                 {video.filename}
               </div>
-              <div class="text-xs text-gray-500">
-                {video.resolution} · {video.framerate}fps · {formatSize(video.filesize)}
-              </div>
+              <div class="text-xs text-gray-500">{formatSize(video.fileSize)}</div>
             </div>
-            <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-              {video.camera_key}
-            </span>
           </div>
         )}
       </For>

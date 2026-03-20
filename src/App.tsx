@@ -1,17 +1,29 @@
 import DirectoryPicker from '@components/DirectoryPicker'
 import ExportPanel from '@components/ExportPanel'
 import VideoList from '@components/VideoList'
+import { invoke } from '@tauri-apps/api/core'
 import { createSignal, type Component } from 'solid-js'
 import type { VideoFile } from './types'
 
 const App: Component = () => {
   const [directory, setDirectory] = createSignal<string | null>(null)
   const [videos, setVideos] = createSignal<VideoFile[]>([])
+  const [loading, setLoading] = createSignal(false)
 
   const handleDirectoryChange = (path: string | null) => {
     setDirectory(path)
-    // TODO: call Rust scan command, populate videos
-    setVideos([])
+    if (!path) {
+      setVideos([])
+      return
+    }
+    setLoading(true)
+    invoke<VideoFile[]>('scan_directory', { dirPath: path })
+      .then(result => setVideos(result))
+      .catch(err => {
+        console.error('Scan failed:', err)
+        setVideos([])
+      })
+      .finally(() => setLoading(false))
   }
 
   return (
@@ -27,7 +39,7 @@ const App: Component = () => {
             />
           </div>
           <div class="flex-1 min-h-0 overflow-hidden p-4">
-            <VideoList videos={videos()} />
+            <VideoList videos={videos()} loading={loading()} />
           </div>
         </div>
 
