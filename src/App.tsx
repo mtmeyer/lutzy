@@ -1,4 +1,5 @@
 import DirectoryPicker from '@components/DirectoryPicker'
+import type { DropdownOption } from '@components/Dropdown'
 import LutAssignment from '@components/LutAssignment'
 import VideoList from '@components/VideoList'
 import { invoke } from '@tauri-apps/api/core'
@@ -15,6 +16,7 @@ const App: Component = () => {
     suffix: '_graded',
     overwrite: false
   })
+  const luts: DropdownOption[] = []
 
   const selectedVideos = createMemo(() => videos().filter(v => v.selected))
   const selectedCount = createMemo(() => selectedVideos().length)
@@ -107,6 +109,7 @@ const App: Component = () => {
         <div class="flex-1 min-h-0 overflow-y-auto p-4">
           <LutAssignment
             cameras={uniqueCameras()}
+            luts={luts}
             outputSettings={outputSettings()}
             onOutputChange={setOutputSettings}
           />

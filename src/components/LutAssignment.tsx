@@ -1,13 +1,25 @@
-import { For, Show, type Component } from 'solid-js'
+import { createSignal, For, Show, type Component } from 'solid-js'
 import type { OutputSettings } from '../types'
+import Dropdown, { type DropdownOption } from './Dropdown'
+import InputField from './InputField'
+import Toggle from './Toggle'
 
 interface LutAssignmentProps {
   cameras: { key: string; display: string }[]
+  luts: DropdownOption[]
   outputSettings: OutputSettings
   onOutputChange: (settings: OutputSettings) => void
 }
 
 const LutAssignment: Component<LutAssignmentProps> = props => {
+  const [selections, setSelections] = createSignal<Record<string, DropdownOption | null>>(
+    {}
+  )
+
+  const handleChange = (cameraKey: string, option: DropdownOption | null) => {
+    setSelections(prev => ({ ...prev, [cameraKey]: option }))
+  }
+
   return (
     <div class="flex flex-col gap-6">
       <Show when={props.cameras.length === 0}>
@@ -30,12 +42,13 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                   </div>
                   <div class="p-3">
                     <div class="flex items-center gap-2">
-                      <select
-                        class="flex-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-600 appearance-none"
-                        disabled
-                      >
-                        <option>Select a LUT…</option>
-                      </select>
+                      <Dropdown
+                        options={props.luts}
+                        value={selections()[camera.key] ?? null}
+                        onChange={option => handleChange(camera.key, option)}
+                        placeholder="Select a LUT…"
+                        disabled={props.luts.length === 0}
+                      />
                     </div>
                     <div class="mt-2 text-xs text-gray-400">last used</div>
                   </div>
@@ -59,34 +72,28 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
               </div>
               <div class="flex items-center justify-between px-3 py-2.5">
                 <span class="text-sm text-gray-500">Suffix</span>
-                <input
-                  type="text"
+                <InputField
                   value={props.outputSettings.suffix}
-                  onInput={e =>
+                  onChange={value =>
                     props.onOutputChange({
                       ...props.outputSettings,
-                      suffix: e.currentTarget.value
+                      suffix: value
                     })
                   }
-                  class="w-32 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-right text-sm text-gray-800 focus:border-blue-400 focus:outline-none"
+                  class="w-32 text-right"
                 />
               </div>
               <div class="flex items-center justify-between px-3 py-2.5">
                 <span class="text-sm text-gray-500">Overwrite</span>
-                <label class="relative inline-flex cursor-pointer items-center">
-                  <input
-                    type="checkbox"
-                    checked={props.outputSettings.overwrite}
-                    onChange={e =>
-                      props.onOutputChange({
-                        ...props.outputSettings,
-                        overwrite: e.currentTarget.checked
-                      })
-                    }
-                    class="peer sr-only"
-                  />
-                  <div class="h-5 w-9 rounded-full bg-gray-200 after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-blue-600 peer-checked:after:translate-x-4" />
-                </label>
+                <Toggle
+                  checked={props.outputSettings.overwrite}
+                  onChange={pressed =>
+                    props.onOutputChange({
+                      ...props.outputSettings,
+                      overwrite: pressed
+                    })
+                  }
+                />
               </div>
             </div>
           </div>
