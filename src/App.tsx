@@ -2,13 +2,14 @@ import DirectoryPicker from '@components/DirectoryPicker'
 import ExportPanel from '@components/ExportPanel'
 import VideoList from '@components/VideoList'
 import { invoke } from '@tauri-apps/api/core'
-import { createSignal, type Component } from 'solid-js'
+import { createEffect, createSignal, type Component } from 'solid-js'
 import type { VideoFile } from './types'
 
 const App: Component = () => {
   const [directory, setDirectory] = createSignal<string | null>(null)
   const [videos, setVideos] = createSignal<VideoFile[]>([])
   const [loading, setLoading] = createSignal(false)
+
 
   const handleDirectoryChange = (path: string | null) => {
     setDirectory(path)
@@ -38,7 +39,7 @@ const App: Component = () => {
               videos={videos()}
             />
           </div>
-          <div class="flex-1 min-h-0 overflow-hidden p-4">
+          <div class="flex-1 min-h-0 overflow-y-auto p-4">
             <VideoList videos={videos()} loading={loading()} />
           </div>
         </div>
