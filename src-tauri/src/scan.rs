@@ -1,3 +1,4 @@
+use crate::metadata;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -57,14 +58,21 @@ pub fn scan_directory(dir_path: String) -> Result<Vec<VideoFile>, String> {
 
         let path_str = file_path.to_string_lossy().to_string();
 
-        videos.push(VideoFile {
-            filename,
-            path: path_str,
-            file_size: meta.len(),
+        let video_meta = metadata::probe_video(&path_str).unwrap_or(metadata::VideoMetadata {
             resolution: String::new(),
             framerate: 0.0,
             duration: 0.0,
             camera_key: String::new(),
+        });
+
+        videos.push(VideoFile {
+            filename,
+            path: path_str,
+            file_size: meta.len(),
+            resolution: video_meta.resolution,
+            framerate: video_meta.framerate,
+            duration: video_meta.duration,
+            camera_key: video_meta.camera_key,
         });
     }
 
