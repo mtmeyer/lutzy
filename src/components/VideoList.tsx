@@ -29,7 +29,7 @@ const VideoList: Component<VideoListProps> = props => {
                   {video.filename}
                 </div>
                 <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                  {video.cameraKey || 'Unknown'}
+                  {video.cameraDisplay || video.cameraKey || 'Unknown'}
                 </span>
               </div>
               <div class="mt-1 text-xs text-gray-500">

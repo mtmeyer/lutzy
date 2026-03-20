@@ -8,6 +8,7 @@ pub struct VideoMetadata {
     pub framerate: f64,
     pub duration: f64,
     pub camera_key: String,
+    pub camera_display: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,13 +59,14 @@ pub fn probe_video(path: &str) -> Result<VideoMetadata, String> {
     let resolution = extract_resolution(&json);
     let framerate = extract_framerate(&json);
     let duration = extract_duration(&json);
-    let camera_key = extract_camera_key(&json, path);
+    let (camera_key, camera_display) = extract_camera_info(&json, path);
 
     Ok(VideoMetadata {
         resolution,
         framerate,
         duration,
         camera_key,
+        camera_display,
     })
 }
 
@@ -114,162 +116,72 @@ fn extract_duration(json: &FfprobeOutput) -> f64 {
     0.0
 }
 
-fn extract_camera_key(json: &FfprobeOutput, path: &str) -> String {
+fn extract_camera_info(json: &FfprobeOutput, path: &str) -> (String, String) {
     let tags = json.format.as_ref().and_then(|f| f.tags.as_ref());
 
     // 1. com.apple.quicktime.model
     if let Some(tags) = tags {
         if let Some(model) = tags.get("com.apple.quicktime.model") {
-            let key = normalize_camera_key(model);
-            if !key.is_empty() {
-                return key;
+            let display = clean_display(model);
+            if !display.is_empty() {
+                return (slugify_key(&display), display);
             }
         }
 
         // 2. make + model
-        let make = tags.get("make").cloned().unwrap_or_default();
-        let model = tags.get("model").cloned().unwrap_or_default();
+        let make = tags.get("make").map(|s| s.trim()).unwrap_or_default();
+        let model = tags.get("model").map(|s| s.trim()).unwrap_or_default();
         if !make.is_empty() || !model.is_empty() {
             let combined = format!("{} {}", make, model).trim().to_string();
             if !combined.is_empty() {
-                let key = normalize_camera_key(&combined);
-                if !key.is_empty() {
-                    return key;
+                let display = clean_display(&combined);
+                if !display.is_empty() {
+                    return (slugify_key(&display), display);
                 }
-            }
-        }
-
-        // 3. encoder
-        if let Some(encoder) = tags.get("encoder") {
-            let key = normalize_camera_key(encoder);
-            if !key.is_empty() {
-                return key;
             }
         }
     }
 
-    // 4. File extension hint
+    // 3. File extension hint
     let ext = Path::new(path)
         .extension()
         .and_then(|e| e.to_str())
         .map(|e| e.to_lowercase());
 
     match ext.as_deref() {
-        Some("braw") => "blackmagic".to_string(),
-        Some("mxf") => "sony_or_canon".to_string(),
-        Some("r3d") => "red".to_string(),
-        _ => String::new(),
+        Some("braw") => ("blackmagic".to_string(), "Blackmagic".to_string()),
+        Some("r3d") => ("red".to_string(), "RED".to_string()),
+        Some("mxf") => ("mxf".to_string(), "MXF".to_string()),
+        _ => (String::new(), String::new()),
     }
 }
 
-fn normalize_camera_key(raw: &str) -> String {
-    let lower = raw.to_lowercase();
+fn clean_display(raw: &str) -> String {
+    // Trim and collapse whitespace
+    let parts: Vec<&str> = raw.split_whitespace().collect();
+    parts.join(" ")
+}
 
-    // Apple/iPhone
-    if lower.contains("iphone") {
-        return "apple_iphone".to_string();
-    }
-    if lower.contains("ipad") {
-        return "apple_ipad".to_string();
-    }
+fn slugify_key(input: &str) -> String {
+    let mut result = String::with_capacity(input.len());
+    let mut last_was_underscore = true; // skip leading underscores
 
-    // Sony
-    if lower.contains("sony") || lower.contains("ilme") {
-        if lower.contains("fx3") {
-            return "sony_fx3".to_string();
+    for c in input.chars() {
+        if c.is_alphanumeric() {
+            result.push(c.to_ascii_lowercase());
+            last_was_underscore = false;
+        } else if !last_was_underscore {
+            result.push('_');
+            last_was_underscore = true;
         }
-        if lower.contains("fx6") {
-            return "sony_fx6".to_string();
-        }
-        if lower.contains("fx30") {
-            return "sony_fx30".to_string();
-        }
-        if lower.contains("a7") {
-            if lower.contains("iii") || lower.contains("3") {
-                return "sony_a7iii".to_string();
-            }
-            if lower.contains("iv") || lower.contains("4") {
-                return "sony_a7iv".to_string();
-            }
-            return "sony_a7".to_string();
-        }
-        return "sony".to_string();
     }
 
-    // Canon
-    if lower.contains("canon") {
-        if lower.contains("r5") {
-            return "canon_r5".to_string();
-        }
-        if lower.contains("r6") {
-            return "canon_r6".to_string();
-        }
-        if lower.contains("r7") {
-            return "canon_r7".to_string();
-        }
-        if lower.contains("r8") {
-            return "canon_r8".to_string();
-        }
-        return "canon".to_string();
+    // Trim trailing underscore
+    if result.ends_with('_') {
+        result.pop();
     }
 
-    // Blackmagic
-    if lower.contains("blackmagic") || lower.contains("bmpcc") {
-        if lower.contains("6k") {
-            return "bmpcc_6k".to_string();
-        }
-        if lower.contains("4k") {
-            return "bmpcc_4k".to_string();
-        }
-        return "blackmagic".to_string();
-    }
-
-    // Nikon
-    if lower.contains("nikon") {
-        if lower.contains("z8") {
-            return "nikon_z8".to_string();
-        }
-        if lower.contains("z9") {
-            return "nikon_z9".to_string();
-        }
-        if lower.contains("z6") {
-            return "nikon_z6".to_string();
-        }
-        return "nikon".to_string();
-    }
-
-    // Panasonic
-    if lower.contains("panasonic") || lower.contains("lumix") {
-        if lower.contains("s5") {
-            return "panasonic_s5".to_string();
-        }
-        if lower.contains("s1") {
-            return "panasonic_s1".to_string();
-        }
-        return "panasonic".to_string();
-    }
-
-    // RED
-    if lower.contains("red") || lower.contains("r3d") || lower.contains("komodo") {
-        return "red".to_string();
-    }
-
-    // GoPro
-    if lower.contains("gopro") {
-        return "gopro".to_string();
-    }
-
-    // DJI
-    if lower.contains("dji") {
-        return "dji".to_string();
-    }
-
-    // Fujifilm
-    if lower.contains("fujifilm") || lower.contains("fuji") {
-        return "fujifilm".to_string();
-    }
-
-    String::new()
+    result
 }
 
 fn parse_fraction(s: &str) -> Option<f64> {

@@ -6,4 +6,5 @@ export interface VideoFile {
   framerate: number
   duration: number
   cameraKey: string
+  cameraDisplay: string
 }
