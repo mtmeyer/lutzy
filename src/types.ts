@@ -7,4 +7,12 @@ export interface VideoFile {
   duration: number
   cameraKey: string
   cameraDisplay: string
+  selected: boolean
+}
+
+export interface OutputSettings {
+  destination: 'same' | 'custom'
+  customPath: string
+  suffix: string
+  overwrite: boolean
 }

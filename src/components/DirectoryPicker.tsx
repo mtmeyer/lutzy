@@ -1,11 +1,9 @@
 import { open } from '@tauri-apps/plugin-dialog'
 import type { Component } from 'solid-js'
-import type { VideoFile } from '../types'
 
 interface DirectoryPickerProps {
   directory: string | null
   onDirectoryChange: (path: string | null) => void
-  videos: VideoFile[]
 }
 
 const DirectoryPicker: Component<DirectoryPickerProps> = props => {
@@ -22,23 +20,17 @@ const DirectoryPicker: Component<DirectoryPickerProps> = props => {
   }
 
   return (
-    <div class="flex flex-col gap-3">
+    <div class="flex items-center gap-2">
+      <div class="flex-1 min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-600 truncate">
+        {props.directory || 'No directory selected'}
+      </div>
       <button
         onClick={pickDirectory}
-        class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition-colors"
+        class="shrink-0 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+        title="Browse"
       >
-        Select Directory
+        ↗
       </button>
-      {props.directory && (
-        <div class="text-sm text-gray-600 truncate" title={props.directory}>
-          {props.directory}
-        </div>
-      )}
-      {props.directory && props.videos.length > 0 && (
-        <div class="text-xs text-gray-500">
-          {props.videos.length} video{props.videos.length !== 1 ? 's' : ''} found
-        </div>
-      )}
     </div>
   )
 }
