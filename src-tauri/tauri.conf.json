@@ -1,24 +1,25 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "lut-applicator",
-  "version": "0.1.0",
-  "identifier": "com.michael.lut-applicator",
+  "productName": "MyApp",
+  "version": "2.0.0",
+  "identifier": "com.tauri-solid-ts-tailwind-vite.dev",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "lut-applicator",
+        "title": "app",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "resizable": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'; connect-src ipc: http://ipc.localhost"
     }
   },
   "bundle": {

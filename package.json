@@ -1,25 +1,42 @@
 {
-  "name": "lut-applicator",
-  "version": "0.1.0",
-  "description": "",
+  "name": "tauri-solid-tailwind-ts-vite-template",
+  "version": "2.0.0",
+  "author": "AR10",
   "type": "module",
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
+    "dev": "vite dev",
     "build": "vite build",
-    "serve": "vite preview",
+    "dev:tauri": "tauri dev",
+    "build:tauri": "tauri build",
+    "preview": "vite preview",
+    "prettier": "prettier src -c",
+    "prettier:fix": "prettier src -w",
+    "eslint": "eslint src",
+    "eslint:fix": "eslint src --fix",
     "tauri": "tauri"
   },
   "license": "MIT",
-  "dependencies": {
-    "solid-js": "^1.9.3",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
-  },
   "devDependencies": {
-    "typescript": "~5.6.2",
-    "vite": "^6.0.3",
-    "vite-plugin-solid": "^2.11.0",
-    "@tauri-apps/cli": "^2"
+    "@eslint/js": "9.39.4",
+    "@ianvs/prettier-plugin-sort-imports": "4.7.1",
+    "@tailwindcss/vite": "4.2.2",
+    "@types/node": "25.5.0",
+    "eslint": "9.39.4",
+    "eslint-config-prettier": "10.1.8",
+    "lightningcss": "1.32.0",
+    "prettier": "3.8.1",
+    "prettier-eslint-cli": "8.0.1",
+    "prettier-plugin-tailwindcss": "0.7.2",
+    "tailwindcss": "4.2.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.57.1",
+    "vite": "7.3.1",
+    "vite-plugin-solid": "2.11.11",
+    "vite-tsconfig-paths": "5.1.4"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.10.1",
+    "@tauri-apps/cli": "2.10.1",
+    "solid-js": "1.9.11"
   }
 }
