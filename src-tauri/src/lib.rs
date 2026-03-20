@@ -10,9 +10,7 @@ pub fn run() {
     }
 
     builder
-        // .plugin( /* Add your Tauri plugin here */ )
-        // Add your commands here that you will call from your JS code
-        // .invoke_handler(tauri::generate_handler![ /* Add your commands here */ ])
+        .plugin(tauri_plugin_dialog::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
