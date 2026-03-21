@@ -12,21 +12,16 @@ interface LutAssignmentProps {
   onLutsAdded: () => void
   outputSettings: OutputSettings
   onOutputChange: (settings: OutputSettings) => void
+  selections: Record<string, DropdownOption | null>
+  onSelectionChange: (cameraKey: string, option: DropdownOption | null) => void
 }
 
 const LutAssignment: Component<LutAssignmentProps> = props => {
-  const [selections, setSelections] = createSignal<Record<string, DropdownOption | null>>(
-    {}
-  )
   const [adding, setAdding] = createSignal(false)
 
   const dropdownOptions = createMemo<DropdownOption[]>(() =>
     props.luts.map(l => ({ label: l.label, value: l.storedPath }))
   )
-
-  const handleChange = (cameraKey: string, option: DropdownOption | null) => {
-    setSelections(prev => ({ ...prev, [cameraKey]: option }))
-  }
 
   const handleAddLuts = async () => {
     const selected = await open({
@@ -82,8 +77,8 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                     <div class="flex items-center gap-2">
                       <Dropdown
                         options={dropdownOptions()}
-                        value={selections()[camera.key] ?? null}
-                        onChange={option => handleChange(camera.key, option)}
+                        value={props.selections[camera.key] ?? null}
+                        onChange={option => props.onSelectionChange(camera.key, option)}
                         placeholder="Select a LUT…"
                         disabled={dropdownOptions().length === 0}
                       />

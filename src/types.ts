@@ -24,3 +24,33 @@ export interface LutFile {
   storedPath: string
   addedAt: string
 }
+
+export interface ExportVideo {
+  path: string
+  cameraKey: string
+}
+
+export interface ExportOutputSettings {
+  destination: 'same' | 'custom'
+  customPath: string
+  suffix: string
+  overwrite: boolean
+}
+
+export interface ExportJob {
+  videos: ExportVideo[]
+  cameraLuts: Record<string, string>
+  outputSettings: ExportOutputSettings
+}
+
+export interface ExportProgress {
+  fileIndex: number
+  totalFiles: number
+  filename: string
+  frame: number | null
+  fps: number | null
+  time: string | null
+  speed: string | null
+  percent: number | null
+  status: 'processing' | 'done' | 'error' | 'complete'
+}

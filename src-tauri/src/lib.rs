@@ -2,6 +2,7 @@ use tauri::Manager;
 
 mod commands;
 mod db;
+mod export;
 mod lut;
 mod metadata;
 mod scan;
@@ -29,7 +30,8 @@ pub fn run() {
             scan::scan_directory,
             commands::add_luts,
             commands::get_luts,
-            commands::delete_lut
+            commands::delete_lut,
+            export::start_export
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

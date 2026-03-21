@@ -1,9 +1,17 @@
 import DirectoryPicker from '@components/DirectoryPicker'
+import type { DropdownOption } from '@components/Dropdown'
 import LutAssignment from '@components/LutAssignment'
 import VideoList from '@components/VideoList'
 import { invoke } from '@tauri-apps/api/core'
-import { createMemo, createSignal, onMount, type Component } from 'solid-js'
-import type { LutFile, OutputSettings, VideoFile } from './types'
+import { listen } from '@tauri-apps/api/event'
+import { createMemo, createSignal, onCleanup, onMount, type Component } from 'solid-js'
+import type {
+  ExportJob,
+  ExportProgress,
+  LutFile,
+  OutputSettings,
+  VideoFile
+} from './types'
 
 const App: Component = () => {
   const [directory, setDirectory] = createSignal<string | null>(null)
@@ -16,6 +24,11 @@ const App: Component = () => {
     overwrite: false
   })
   const [luts, setLuts] = createSignal<LutFile[]>([])
+  const [lutSelections, setLutSelections] = createSignal<
+    Record<string, DropdownOption | null>
+  >({})
+  const [exporting, setExporting] = createSignal(false)
+  const [exportProgress, setExportProgress] = createSignal<ExportProgress | null>(null)
 
   const fetchLuts = () => {
     invoke<LutFile[]>('get_luts')
@@ -24,6 +37,18 @@ const App: Component = () => {
   }
 
   onMount(fetchLuts)
+
+  // Listen for export progress events
+  onMount(() => {
+    void listen<ExportProgress>('export-progress', event => {
+      setExportProgress(event.payload)
+      if (event.payload.status === 'complete') {
+        setExporting(false)
+      }
+    }).then(unlisten => {
+      onCleanup(unlisten)
+    })
+  })
 
   const selectedVideos = createMemo(() => videos().filter(v => v.selected))
   const selectedCount = createMemo(() => selectedVideos().length)
@@ -44,6 +69,14 @@ const App: Component = () => {
     }
     return cameras
   })
+
+  const missingLutCameras = createMemo(() => {
+    return uniqueCameras().filter(c => !lutSelections()[c.key])
+  })
+
+  const canExport = createMemo(
+    () => selectedCount() > 0 && !exporting() && missingLutCameras().length === 0
+  )
 
   const handleDirectoryChange = (path: string | null) => {
     setDirectory(path)
@@ -70,6 +103,44 @@ const App: Component = () => {
   const toggleSelectAll = () => {
     const allSelected = videos().every(v => v.selected)
     setVideos(prev => prev.map(v => ({ ...v, selected: !allSelected })))
+  }
+
+  const handleLutSelectionChange = (cameraKey: string, option: DropdownOption | null) => {
+    setLutSelections(prev => ({ ...prev, [cameraKey]: option }))
+  }
+
+  const handleExport = async () => {
+    if (!canExport()) return
+
+    const cameraLuts: Record<string, string> = {}
+    for (const [key, opt] of Object.entries(lutSelections())) {
+      if (opt) cameraLuts[key] = opt.value
+    }
+
+    const job: ExportJob = {
+      videos: selectedVideos().map(v => ({
+        path: v.path,
+        cameraKey: v.cameraKey,
+        duration: v.duration
+      })),
+      cameraLuts,
+      outputSettings: {
+        destination: outputSettings().destination,
+        customPath: outputSettings().customPath,
+        suffix: outputSettings().suffix,
+        overwrite: outputSettings().overwrite
+      }
+    }
+
+    setExporting(true)
+    setExportProgress(null)
+
+    try {
+      await invoke('start_export', { job })
+    } catch (err) {
+      console.error('Export failed:', err)
+      setExporting(false)
+    }
   }
 
   return (
@@ -120,20 +191,57 @@ const App: Component = () => {
             onLutsAdded={fetchLuts}
             outputSettings={outputSettings()}
             onOutputChange={setOutputSettings}
+            selections={lutSelections()}
+            onSelectionChange={handleLutSelectionChange}
           />
         </div>
       </div>
 
       {/* Footer */}
       <footer class="flex items-center gap-4 border-t border-gray-200 bg-white px-4 py-3">
+        {/* Validation warning */}
+        {missingLutCameras().length > 0 && selectedCount() > 0 && (
+          <span class="text-xs text-amber-600 shrink-0">
+            No LUT for:{' '}
+            {missingLutCameras()
+              .map(c => c.display)
+              .join(', ')}
+          </span>
+        )}
+        {/* Progress bar */}
         <div class="h-2 flex-1 rounded-full bg-gray-200">
-          <div class="h-full w-0 rounded-full bg-blue-500 transition-all" />
+          <div
+            class="h-full rounded-full bg-blue-500 transition-all"
+            style={{
+              width: (() => {
+                const p = exportProgress()
+                if (!p) return '0%'
+                const percent =
+                  ((p.fileIndex + (p.percent ?? 0) / 100) / p.totalFiles) * 100
+                return `${Math.min(percent, 100)}%`
+              })()
+            }}
+          />
         </div>
+        {/* Progress text */}
+        {(() => {
+          const p = exportProgress()
+          if (!exporting() || !p) return null
+          return (
+            <span class="text-xs text-gray-500 shrink-0 max-w-[180px] truncate">
+              {p.fileIndex + 1}/{p.totalFiles} {p.filename}
+            </span>
+          )
+        })()}
+        {/* Export button */}
         <button
-          disabled={selectedCount() === 0}
-          class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          onClick={() => void handleExport()}
+          disabled={!canExport()}
+          class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
         >
-          Export {selectedCount()} clip{selectedCount() !== 1 ? 's' : ''}
+          {exporting()
+            ? `Exporting… ${(exportProgress()?.fileIndex ?? 0) + 1}/${selectedCount()}`
+            : `Export ${selectedCount()} clip${selectedCount() !== 1 ? 's' : ''}`}
         </button>
       </footer>
     </div>
