@@ -1,6 +1,8 @@
 use tauri::Manager;
 
+mod commands;
 mod db;
+mod lut;
 mod metadata;
 mod scan;
 
@@ -23,7 +25,12 @@ pub fn run() {
             app.manage(state);
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![scan::scan_directory])
+        .invoke_handler(tauri::generate_handler![
+            scan::scan_directory,
+            commands::add_luts,
+            commands::get_luts,
+            commands::delete_lut
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

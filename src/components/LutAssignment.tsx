@@ -1,12 +1,15 @@
-import { createSignal, For, Show, type Component } from 'solid-js'
-import type { OutputSettings } from '../types'
+import { invoke } from '@tauri-apps/api/core'
+import { open } from '@tauri-apps/plugin-dialog'
+import { createMemo, createSignal, For, Show, type Component } from 'solid-js'
+import type { LutFile, OutputSettings } from '../types'
 import Dropdown, { type DropdownOption } from './Dropdown'
 import InputField from './InputField'
 import Toggle from './Toggle'
 
 interface LutAssignmentProps {
   cameras: { key: string; display: string }[]
-  luts: DropdownOption[]
+  luts: LutFile[]
+  onLutsAdded: () => void
   outputSettings: OutputSettings
   onOutputChange: (settings: OutputSettings) => void
 }
@@ -15,9 +18,35 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
   const [selections, setSelections] = createSignal<Record<string, DropdownOption | null>>(
     {}
   )
+  const [adding, setAdding] = createSignal(false)
+
+  const dropdownOptions = createMemo<DropdownOption[]>(() =>
+    props.luts.map(l => ({ label: l.label, value: l.storedPath }))
+  )
 
   const handleChange = (cameraKey: string, option: DropdownOption | null) => {
     setSelections(prev => ({ ...prev, [cameraKey]: option }))
+  }
+
+  const handleAddLuts = async () => {
+    const selected = await open({
+      multiple: true,
+      filters: [{ name: 'LUT Files', extensions: ['cube', '3dl'] }]
+    })
+
+    if (!selected || (Array.isArray(selected) && selected.length === 0)) return
+
+    const paths = Array.isArray(selected) ? selected : [selected]
+    setAdding(true)
+
+    try {
+      await invoke<LutFile[]>('add_luts', { filePaths: paths })
+      props.onLutsAdded()
+    } catch (err) {
+      console.error('Failed to add LUTs:', err)
+    } finally {
+      setAdding(false)
+    }
   }
 
   return (
@@ -30,8 +59,17 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
 
       <Show when={props.cameras.length > 0}>
         <div>
-          <div class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-            LUT Assignment
+          <div class="mb-3 flex items-center justify-between">
+            <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              LUT Assignment
+            </div>
+            <button
+              onClick={() => void handleAddLuts()}
+              disabled={adding()}
+              class="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800 disabled:opacity-50"
+            >
+              {adding() ? 'Adding…' : 'Add LUT'}
+            </button>
           </div>
           <div class="flex flex-col gap-3">
             <For each={props.cameras}>
@@ -43,11 +81,11 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                   <div class="p-3">
                     <div class="flex items-center gap-2">
                       <Dropdown
-                        options={props.luts}
+                        options={dropdownOptions()}
                         value={selections()[camera.key] ?? null}
                         onChange={option => handleChange(camera.key, option)}
                         placeholder="Select a LUT…"
-                        disabled={props.luts.length === 0}
+                        disabled={dropdownOptions().length === 0}
                       />
                     </div>
                     <div class="mt-2 text-xs text-gray-400">last used</div>

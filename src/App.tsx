@@ -1,10 +1,9 @@
 import DirectoryPicker from '@components/DirectoryPicker'
-import type { DropdownOption } from '@components/Dropdown'
 import LutAssignment from '@components/LutAssignment'
 import VideoList from '@components/VideoList'
 import { invoke } from '@tauri-apps/api/core'
-import { createMemo, createSignal, type Component } from 'solid-js'
-import type { OutputSettings, VideoFile } from './types'
+import { createMemo, createSignal, onMount, type Component } from 'solid-js'
+import type { LutFile, OutputSettings, VideoFile } from './types'
 
 const App: Component = () => {
   const [directory, setDirectory] = createSignal<string | null>(null)
@@ -16,7 +15,15 @@ const App: Component = () => {
     suffix: '_graded',
     overwrite: false
   })
-  const luts: DropdownOption[] = []
+  const [luts, setLuts] = createSignal<LutFile[]>([])
+
+  const fetchLuts = () => {
+    invoke<LutFile[]>('get_luts')
+      .then(result => setLuts(result))
+      .catch(err => console.error('Failed to fetch LUTs:', err))
+  }
+
+  onMount(fetchLuts)
 
   const selectedVideos = createMemo(() => videos().filter(v => v.selected))
   const selectedCount = createMemo(() => selectedVideos().length)
@@ -109,7 +116,8 @@ const App: Component = () => {
         <div class="flex-1 min-h-0 overflow-y-auto p-4">
           <LutAssignment
             cameras={uniqueCameras()}
-            luts={luts}
+            luts={luts()}
+            onLutsAdded={fetchLuts}
             outputSettings={outputSettings()}
             onOutputChange={setOutputSettings}
           />

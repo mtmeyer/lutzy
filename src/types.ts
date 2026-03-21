@@ -16,3 +16,11 @@ export interface OutputSettings {
   suffix: string
   overwrite: boolean
 }
+
+export interface LutFile {
+  id: number
+  filename: string
+  label: string
+  storedPath: string
+  addedAt: string
+}
