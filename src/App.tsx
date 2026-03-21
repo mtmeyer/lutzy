@@ -124,7 +124,8 @@ const App: Component = () => {
         path: v.path,
         cameraKey: v.cameraKey,
         duration: v.duration,
-        videoCodec: v.videoCodec
+        videoCodec: v.videoCodec,
+        bitRate: v.bitRate
       })),
       cameraLuts,
       outputSettings: {

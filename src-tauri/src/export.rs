@@ -14,6 +14,7 @@ pub struct ExportVideo {
     pub camera_key: String,
     pub duration: Option<f64>,
     pub video_codec: String,
+    pub bit_rate: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -135,30 +136,47 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
                 .hide_banner()
                 .input(&video.path)
                 .args(["-map_metadata", "0"])
+                .args(["-map", "0:v:0"])
+                .args(["-map", "0:a:0"])
                 .args(["-vf", &format!("lut3d={}", lut_path)]);
 
             // Determine video encoder based on codec selection
-            let encoder = match job.output_settings.video_codec.as_str() {
-                "h264" => Some("libx264"),
-                "h265" => Some("libx265"),
-                "prores" => Some("prores_ks"),
+            let (encoder, force_yuv420p) = match job.output_settings.video_codec.as_str() {
+                "h264" => (Some("libx264".to_string()), true),
+                "h265" => (Some("libx265".to_string()), true),
+                "prores" => (Some("prores_ks".to_string()), false),
                 _ => {
-                    // "same as source" — match detected source codec
-                    match video.video_codec.as_str() {
-                        "h264" => Some("libx264"),
-                        "hevc" => Some("libx265"),
-                        "prores" | "prores_ks" => Some("prores_ks"),
+                    // "same as source" — map ffprobe codec name to FFmpeg encoder name
+                    let mapped = match video.video_codec.to_lowercase().as_str() {
+                        "h264" | "avc1" | "avc3" => Some("libx264".to_string()),
+                        "hevc" | "h265" | "hvc1" | "hev1" | "dvhe" | "dvh1" => {
+                            Some("libx265".to_string())
+                        }
+                        "vp9" => Some("libvpx-vp9".to_string()),
+                        "vp8" => Some("libvpx".to_string()),
+                        "av1" => Some("libaom-av1".to_string()),
+                        "mpeg4" | "xvid" | "divx" => Some("mpeg4".to_string()),
+                        "mpeg2video" => Some("mpeg2video".to_string()),
+                        "mpeg1video" => Some("mpeg1video".to_string()),
                         _ => None,
-                    }
+                    };
+                    (mapped, false)
                 }
             };
-            if let Some(enc) = encoder {
+            if let Some(ref enc) = encoder {
                 command.args(["-c:v", enc]);
+                if force_yuv420p {
+                    command.args(["-pix_fmt", "yuv420p"]);
+                }
+                // Pass source bitrate when using "same as source" to match quality
+                if job.output_settings.video_codec == "same" {
+                    if let Some(br) = video.bit_rate {
+                        command.args(["-b:v", &br.to_string()]);
+                    }
+                }
             }
 
-            command
-                .args(["-c:a", "copy"])
-                .args(["-movflags", "use_metadata_tags"]);
+            command.args(["-c:a", "copy"]).args(["-dn"]).args(["-sn"]);
 
             if job.output_settings.overwrite {
                 command.arg("-y");

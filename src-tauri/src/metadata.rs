@@ -10,6 +10,7 @@ pub struct VideoMetadata {
     pub camera_key: String,
     pub camera_display: String,
     pub video_codec: String,
+    pub bit_rate: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -26,12 +27,14 @@ struct FfprobeStream {
     height: Option<u64>,
     r_frame_rate: Option<String>,
     avg_frame_rate: Option<String>,
+    bit_rate: Option<String>,
     tags: Option<std::collections::HashMap<String, String>>,
 }
 
 #[derive(Debug, Deserialize)]
 struct FfprobeFormat {
     duration: Option<String>,
+    bit_rate: Option<String>,
     tags: Option<std::collections::HashMap<String, String>>,
 }
 
@@ -64,6 +67,7 @@ pub fn probe_video(path: &str) -> Result<VideoMetadata, String> {
     let duration = extract_duration(&json);
     let (camera_key, camera_display) = extract_camera_info(&json, path);
     let video_codec = extract_video_codec(&json);
+    let bit_rate = extract_bit_rate(&json);
 
     Ok(VideoMetadata {
         resolution,
@@ -72,6 +76,7 @@ pub fn probe_video(path: &str) -> Result<VideoMetadata, String> {
         camera_key,
         camera_display,
         video_codec,
+        bit_rate,
     })
 }
 
@@ -132,6 +137,32 @@ fn extract_video_codec(json: &FfprobeOutput) -> String {
         }
     }
     String::new()
+}
+
+fn extract_bit_rate(json: &FfprobeOutput) -> Option<u64> {
+    if let Some(ref streams) = json.streams {
+        for stream in streams {
+            if stream.codec_type.as_deref() == Some("video") {
+                if let Some(ref br) = stream.bit_rate {
+                    if let Ok(val) = br.parse::<u64>() {
+                        if val > 0 {
+                            return Some(val);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if let Some(ref format) = json.format {
+        if let Some(ref br) = format.bit_rate {
+            if let Ok(val) = br.parse::<u64>() {
+                if val > 0 {
+                    return Some(val);
+                }
+            }
+        }
+    }
+    None
 }
 
 fn collect_camera_tags(json: &FfprobeOutput) -> std::collections::HashMap<String, String> {

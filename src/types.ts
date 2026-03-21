@@ -8,6 +8,7 @@ export interface VideoFile {
   cameraKey: string
   cameraDisplay: string
   videoCodec: string
+  bitRate: number | null
   selected: boolean
 }
 
@@ -33,6 +34,7 @@ export interface ExportVideo {
   cameraKey: string
   duration: number
   videoCodec: string
+  bitRate: number | null
 }
 
 export interface ExportOutputSettings {
