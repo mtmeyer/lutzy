@@ -1,5 +1,6 @@
 use crate::db::{self, DbState, LutEntry, LUTS_DIR};
 use crate::lut;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use tauri::{AppHandle, Manager};
@@ -105,4 +106,12 @@ pub fn delete_lut(id: i64, app: AppHandle) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_camera_luts(app: AppHandle) -> Result<HashMap<String, String>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let rows = db::get_all_camera_luts(&conn).map_err(|e| e.to_string())?;
+    Ok(rows.into_iter().collect())
 }

@@ -4,7 +4,7 @@ import LutAssignment from '@components/LutAssignment'
 import VideoList from '@components/VideoList'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { createMemo, createSignal, onCleanup, onMount, type Component } from 'solid-js'
+import { createEffect, createMemo, createSignal, onCleanup, onMount, type Component } from 'solid-js'
 import type {
   ExportJob,
   ExportProgress,
@@ -110,6 +110,31 @@ const App: Component = () => {
   const handleLutSelectionChange = (cameraKey: string, option: DropdownOption | null) => {
     setLutSelections(prev => ({ ...prev, [cameraKey]: option }))
   }
+
+  // Prefill LUT dropdowns from saved camera→LUT mappings
+  createEffect(() => {
+    const cameras = uniqueCameras()
+    if (cameras.length === 0) return
+
+    // Build a lookup from stored path → LUT dropdown option
+    const lutByPath = new Map<string, DropdownOption>()
+    for (const lut of luts()) {
+      lutByPath.set(lut.storedPath, { label: lut.label, value: lut.storedPath })
+    }
+
+    invoke<Record<string, string>>('get_camera_luts')
+      .then(saved => {
+        const selections: Record<string, DropdownOption | null> = {}
+        for (const camera of cameras) {
+          const savedPath = saved[camera.key]
+          if (savedPath) {
+            selections[camera.key] = lutByPath.get(savedPath) ?? null
+          }
+        }
+        setLutSelections(prev => ({ ...selections, ...prev }))
+      })
+      .catch(err => console.error('Failed to load camera LUTs:', err))
+  })
 
   const handleExport = async () => {
     if (!canExport()) return

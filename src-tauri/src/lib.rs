@@ -30,6 +30,7 @@ pub fn run() {
             scan::scan_directory,
             commands::add_luts,
             commands::get_luts,
+            commands::get_camera_luts,
             commands::delete_lut,
             export::start_export
         ])

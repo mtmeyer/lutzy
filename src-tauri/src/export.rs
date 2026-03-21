@@ -77,6 +77,17 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
         }
     }
 
+    // Save camera→LUT mappings to SQLite before export begins
+    {
+        let state = app.state::<DbState>();
+        let conn = state.0.lock().map_err(|e| format!("DB error: {}", e))?;
+        for (camera_key, lut_path) in &job.camera_luts {
+            db::set_lut(&conn, camera_key, lut_path)
+                .map_err(|e| format!("Failed to save LUT for {}: {}", camera_key, e))?;
+        }
+    }
+
+    let app_clone = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
         let total = job.videos.len();
 
@@ -114,7 +125,7 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
 
             // Check if output exists and overwrite is not enabled
             if !job.output_settings.overwrite && Path::new(&output_path).exists() {
-                let _ = app.emit(
+                let _ = app_clone.emit(
                     "export-progress",
                     &ExportProgress {
                         file_index: i,
@@ -190,7 +201,7 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
             let mut child = match command.spawn() {
                 Ok(c) => c,
                 Err(e) => {
-                    let _ = app.emit(
+                    let _ = app_clone.emit(
                         "export-progress",
                         &ExportProgress {
                             file_index: i,
@@ -211,7 +222,7 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
             let iter = match child.iter() {
                 Ok(iter) => iter,
                 Err(e) => {
-                    let _ = app.emit(
+                    let _ = app_clone.emit(
                         "export-progress",
                         &ExportProgress {
                             file_index: i,
@@ -242,7 +253,7 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
                             let current = parse_time_to_seconds(&p.time);
                             (current / d * 100.0).clamp(0.0, 100.0)
                         });
-                        let _ = app.emit(
+                        let _ = app_clone.emit(
                             "export-progress",
                             &ExportProgress {
                                 file_index: i,
@@ -262,7 +273,7 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
                 }
             }
 
-            let _ = app.emit(
+            let _ = app_clone.emit(
                 "export-progress",
                 &ExportProgress {
                     file_index: i,
@@ -278,15 +289,7 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
             );
         }
 
-        // Save camera→LUT mappings to SQLite
-        let state = app.state::<DbState>();
-        if let Ok(conn) = state.0.lock() {
-            for (camera_key, lut_path) in &job.camera_luts {
-                let _ = db::set_lut(&conn, camera_key, lut_path);
-            }
-        }
-
-        let _ = app.emit(
+        let _ = app_clone.emit(
             "export-progress",
             &ExportProgress {
                 file_index: total,
