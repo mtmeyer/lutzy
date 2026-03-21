@@ -21,7 +21,9 @@ const App: Component = () => {
     destination: 'same',
     customPath: '',
     suffix: '_graded',
-    overwrite: false
+    overwrite: false,
+    videoCodec: 'same',
+    outputExtension: 'same'
   })
   const [luts, setLuts] = createSignal<LutFile[]>([])
   const [lutSelections, setLutSelections] = createSignal<
@@ -121,14 +123,17 @@ const App: Component = () => {
       videos: selectedVideos().map(v => ({
         path: v.path,
         cameraKey: v.cameraKey,
-        duration: v.duration
+        duration: v.duration,
+        videoCodec: v.videoCodec
       })),
       cameraLuts,
       outputSettings: {
         destination: outputSettings().destination,
         customPath: outputSettings().customPath,
         suffix: outputSettings().suffix,
-        overwrite: outputSettings().overwrite
+        overwrite: outputSettings().overwrite,
+        videoCodec: outputSettings().videoCodec,
+        outputExtension: outputSettings().outputExtension
       }
     }
 

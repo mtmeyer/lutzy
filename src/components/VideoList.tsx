@@ -58,44 +58,11 @@ function CameraBadge(props: { display: string; key: string }) {
   if (!label) {
     return <span class="text-gray-400">[?]</span>
   }
-  // Show a short abbreviation from the display name
-  const short = abbreviateCamera(label)
   return (
     <span class="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium text-gray-600">
-      [{short}]
+      {label}
     </span>
   )
-}
-
-function abbreviateCamera(name: string): string {
-  // Pull out a short identifier: model number or acronym
-
-  // iPhone: just show the number
-  const iphoneMatch = name.match(/iPhone\s+(\S+)/i)
-  if (iphoneMatch) return iphoneMatch[1]
-
-  // Sony: FX3, FX6, A7IV etc
-  const sonyMatch = name.match(/(FX\d+|A\d+\w*|ILME-FX\d+)/i)
-  if (sonyMatch) {
-    return sonyMatch[1].replace(/^ILME-/, '').toUpperCase()
-  }
-
-  // Canon: R5, R6, R5C etc
-  const canonMatch = name.match(/EOS\s+(R\d+C?|R\d)/i)
-  if (canonMatch) return canonMatch[1].toUpperCase()
-
-  // BMPCC: 6K, 4K etc
-  const bmpccMatch = name.match(/(BMPCC|Pocket)\s*(\d+K)/i)
-  if (bmpccMatch) return bmpccMatch[2].toUpperCase()
-
-  // Nikon: Z6, Z8, Z9
-  const nikonMatch = name.match(/Z(\d)/i)
-  if (nikonMatch) return `Z${nikonMatch[1]}`
-
-  // Generic: first word, capped
-  const parts = name.split(/\s+/)
-  if (parts.length === 1) return parts[0].substring(0, 6).toUpperCase()
-  return parts[parts.length - 1].substring(0, 6).toUpperCase()
 }
 
 function formatResolution(res: string): string {

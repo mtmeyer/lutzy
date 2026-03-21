@@ -13,6 +13,7 @@ pub struct ExportVideo {
     pub path: String,
     pub camera_key: String,
     pub duration: Option<f64>,
+    pub video_codec: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,6 +23,8 @@ pub struct ExportOutputSettings {
     pub custom_path: String,
     pub suffix: String,
     pub overwrite: bool,
+    pub video_codec: String,
+    pub output_extension: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -83,7 +86,14 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
                 .file_stem()
                 .and_then(|s| s.to_str())
                 .unwrap_or("output");
-            let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("mp4");
+            let ext = if job.output_settings.output_extension == "same" {
+                path.extension()
+                    .and_then(|e| e.to_str())
+                    .unwrap_or("mp4")
+                    .to_string()
+            } else {
+                job.output_settings.output_extension.clone()
+            };
 
             let output_filename = format!("{}{}.{}", stem, job.output_settings.suffix, ext);
             let output_path = if job.output_settings.destination == "custom"
@@ -124,8 +134,31 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
             command
                 .hide_banner()
                 .input(&video.path)
-                .args(["-vf", &format!("lut3d={}", lut_path)])
-                .args(["-c:a", "copy"]);
+                .args(["-map_metadata", "0"])
+                .args(["-vf", &format!("lut3d={}", lut_path)]);
+
+            // Determine video encoder based on codec selection
+            let encoder = match job.output_settings.video_codec.as_str() {
+                "h264" => Some("libx264"),
+                "h265" => Some("libx265"),
+                "prores" => Some("prores_ks"),
+                _ => {
+                    // "same as source" — match detected source codec
+                    match video.video_codec.as_str() {
+                        "h264" => Some("libx264"),
+                        "hevc" => Some("libx265"),
+                        "prores" | "prores_ks" => Some("prores_ks"),
+                        _ => None,
+                    }
+                }
+            };
+            if let Some(enc) = encoder {
+                command.args(["-c:v", enc]);
+            }
+
+            command
+                .args(["-c:a", "copy"])
+                .args(["-movflags", "use_metadata_tags"]);
 
             if job.output_settings.overwrite {
                 command.arg("-y");

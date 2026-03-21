@@ -16,6 +16,40 @@ interface LutAssignmentProps {
   onSelectionChange: (cameraKey: string, option: DropdownOption | null) => void
 }
 
+const CODEC_EXT_OPTIONS: Record<string, { options: DropdownOption[]; default: string }> = {
+  h264: {
+    options: [
+      { label: 'mp4', value: 'mp4' },
+      { label: 'mkv', value: 'mkv' },
+      { label: 'mov', value: 'mov' }
+    ],
+    default: 'mp4'
+  },
+  h265: {
+    options: [
+      { label: 'mp4', value: 'mp4' },
+      { label: 'mkv', value: 'mkv' },
+      { label: 'mov', value: 'mov' }
+    ],
+    default: 'mp4'
+  },
+  prores: {
+    options: [
+      { label: 'mov', value: 'mov' },
+      { label: 'mkv', value: 'mkv' }
+    ],
+    default: 'mov'
+  }
+}
+
+const SAME_SOURCE_EXT: DropdownOption[] = [
+  { label: 'same as source', value: 'same' }
+]
+
+function getExtForCodec(codec: string) {
+  return CODEC_EXT_OPTIONS[codec] ?? { options: SAME_SOURCE_EXT, default: 'same' }
+}
+
 const LutAssignment: Component<LutAssignmentProps> = props => {
   const [adding, setAdding] = createSignal(false)
 
@@ -115,6 +149,57 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                   }
                   class="w-32 text-right"
                 />
+              </div>
+              <div class="flex items-center justify-between px-3 py-2.5">
+                <span class="text-sm text-gray-500">Codec</span>
+                <div class="w-40">
+                  <Dropdown
+                    options={[
+                      { label: 'Same as source', value: 'same' },
+                      { label: 'H.264', value: 'h264' },
+                      { label: 'H.265', value: 'h265' },
+                      { label: 'ProRes', value: 'prores' }
+                    ]}
+                    value={(() => {
+                      const codec = props.outputSettings.videoCodec
+                      return codec && codec !== 'same'
+                        ? { label: codec.toUpperCase(), value: codec }
+                        : { label: 'Same as source', value: 'same' }
+                    })()}
+                    onChange={option => {
+                      const codec = option?.value ?? 'same'
+                      const extInfo = getExtForCodec(codec)
+                      props.onOutputChange({
+                        ...props.outputSettings,
+                        videoCodec: codec,
+                        outputExtension: extInfo.default
+                      })
+                    }}
+                    placeholder="Same as source"
+                  />
+                </div>
+              </div>
+              <div class="flex items-center justify-between px-3 py-2.5">
+                <span class="text-sm text-gray-500">Format</span>
+                <div class="w-40">
+                  <Dropdown
+                    options={getExtForCodec(props.outputSettings.videoCodec).options}
+                    value={(() => {
+                      const codec = props.outputSettings.videoCodec
+                      const ext = props.outputSettings.outputExtension || 'same'
+                      const info = getExtForCodec(codec)
+                      const found = info.options.find(o => o.value === ext)
+                      return found ?? info.options[0]
+                    })()}
+                    onChange={option =>
+                      props.onOutputChange({
+                        ...props.outputSettings,
+                        outputExtension: option?.value ?? 'same'
+                      })
+                    }
+                    disabled={props.outputSettings.videoCodec === 'same'}
+                  />
+                </div>
               </div>
               <div class="flex items-center justify-between px-3 py-2.5">
                 <span class="text-sm text-gray-500">Overwrite</span>

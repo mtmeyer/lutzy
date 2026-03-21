@@ -16,6 +16,7 @@ pub struct VideoFile {
     pub duration: f64,
     pub camera_key: String,
     pub camera_display: String,
+    pub video_codec: String,
 }
 
 #[tauri::command]
@@ -65,6 +66,7 @@ pub fn scan_directory(dir_path: String) -> Result<Vec<VideoFile>, String> {
             duration: 0.0,
             camera_key: String::new(),
             camera_display: String::new(),
+            video_codec: String::new(),
         });
 
         videos.push(VideoFile {
@@ -76,6 +78,7 @@ pub fn scan_directory(dir_path: String) -> Result<Vec<VideoFile>, String> {
             duration: video_meta.duration,
             camera_key: video_meta.camera_key,
             camera_display: video_meta.camera_display,
+            video_codec: video_meta.video_codec,
         });
     }
 

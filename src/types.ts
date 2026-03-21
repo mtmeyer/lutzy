@@ -7,6 +7,7 @@ export interface VideoFile {
   duration: number
   cameraKey: string
   cameraDisplay: string
+  videoCodec: string
   selected: boolean
 }
 
@@ -15,6 +16,8 @@ export interface OutputSettings {
   customPath: string
   suffix: string
   overwrite: boolean
+  videoCodec: string
+  outputExtension: string
 }
 
 export interface LutFile {
@@ -28,6 +31,8 @@ export interface LutFile {
 export interface ExportVideo {
   path: string
   cameraKey: string
+  duration: number
+  videoCodec: string
 }
 
 export interface ExportOutputSettings {
@@ -35,6 +40,8 @@ export interface ExportOutputSettings {
   customPath: string
   suffix: string
   overwrite: boolean
+  videoCodec: string
+  outputExtension: string
 }
 
 export interface ExportJob {
