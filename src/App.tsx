@@ -2,9 +2,18 @@ import DirectoryPicker from '@components/DirectoryPicker'
 import type { DropdownOption } from '@components/Dropdown'
 import LutAssignment from '@components/LutAssignment'
 import VideoList from '@components/VideoList'
+import WelcomeScreen from '@components/WelcomeScreen'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { createEffect, createMemo, createSignal, onCleanup, onMount, type Component } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+  Show,
+  type Component
+} from 'solid-js'
 import type {
   ExportJob,
   ExportProgress,
@@ -31,6 +40,9 @@ const App: Component = () => {
   >({})
   const [exporting, setExporting] = createSignal(false)
   const [exportProgress, setExportProgress] = createSignal<ExportProgress | null>(null)
+  const [fileProgress, setFileProgress] = createSignal<
+    Record<string, { state: string; percent: number }>
+  >({})
 
   const fetchLuts = () => {
     invoke<LutFile[]>('get_luts')
@@ -43,8 +55,25 @@ const App: Component = () => {
   // Listen for export progress events
   onMount(() => {
     void listen<ExportProgress>('export-progress', event => {
-      setExportProgress(event.payload)
-      if (event.payload.status === 'complete') {
+      const p = event.payload
+      setExportProgress(p)
+
+      // Map fileIndex to video path using the selected videos order
+      const selected = selectedVideos()
+      const videoPath = selected[p.fileIndex]?.path
+
+      if (videoPath && p.status !== 'complete') {
+        setFileProgress(prev => {
+          const entry = {
+            state: p.status,
+            percent: p.percent ?? 0
+          }
+          if (p.status === 'done') entry.percent = 100
+          return { ...prev, [videoPath]: entry }
+        })
+      }
+
+      if (p.status === 'complete') {
         setExporting(false)
       }
     }).then(unlisten => {
@@ -94,6 +123,15 @@ const App: Component = () => {
         setVideos([])
       })
       .finally(() => setLoading(false))
+  }
+
+  const clearAndGoBack = () => {
+    setDirectory(null)
+    setVideos([])
+    setLutSelections({})
+    setExporting(false)
+    setExportProgress(null)
+    setFileProgress({})
   }
 
   const toggleSelect = (path: string) => {
@@ -165,6 +203,7 @@ const App: Component = () => {
 
     setExporting(true)
     setExportProgress(null)
+    setFileProgress({})
 
     try {
       await invoke('start_export', { job })
@@ -175,107 +214,114 @@ const App: Component = () => {
   }
 
   return (
-    <div class="flex flex-col h-screen bg-gray-50 text-gray-900">
-      {/* Header */}
-      <header class="flex items-center border-b border-gray-200 bg-white px-4 py-2">
-        <span class="text-sm font-semibold tracking-wide text-gray-800">Flut</span>
-      </header>
+    <Show
+      when={directory()}
+      fallback={<WelcomeScreen onSelect={handleDirectoryChange} />}
+    >
+      <div class="flex flex-col h-screen bg-gray-50 text-gray-900">
+        {/* Header */}
+        <header class="flex items-center border-b border-gray-200 bg-white px-4 py-2">
+          <span class="text-sm font-semibold tracking-wide text-gray-800">Flut</span>
+        </header>
 
-      {/* Main area */}
-      <div class="flex flex-1 min-h-0">
-        {/* Left panel */}
-        <div class="flex w-[420px] flex-col border-r border-gray-200 bg-white">
-          <div class="border-b border-gray-200 p-3">
-            <DirectoryPicker
-              directory={directory()}
-              onDirectoryChange={handleDirectoryChange}
+        {/* Main area */}
+        <div class="flex flex-1 min-h-0">
+          {/* Left panel */}
+          <div class="flex w-[420px] flex-col border-r border-gray-200 bg-white">
+            <div class="border-b border-gray-200 p-3">
+              <DirectoryPicker
+                directory={directory()}
+                onDirectoryChange={handleDirectoryChange}
+                onBack={clearAndGoBack}
+              />
+            </div>
+            <div class="flex-1 min-h-0 overflow-y-auto">
+              <VideoList
+                videos={videos()}
+                loading={loading()}
+                onToggleSelect={toggleSelect}
+                fileProgress={fileProgress()}
+              />
+            </div>
+            <div class="flex items-center justify-between border-t border-gray-200 px-3 py-2">
+              <span class="text-xs text-gray-500">
+                {selectedCount()} of {totalCount()} selected
+              </span>
+              <button
+                onClick={toggleSelectAll}
+                disabled={totalCount() === 0}
+                class="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {selectedCount() === totalCount() && totalCount() > 0
+                  ? 'Deselect all'
+                  : 'Select all'}
+              </button>
+            </div>
+          </div>
+
+          {/* Right panel */}
+          <div class="flex-1 min-h-0 overflow-y-auto p-4">
+            <LutAssignment
+              cameras={uniqueCameras()}
+              luts={luts()}
+              onLutsAdded={fetchLuts}
+              outputSettings={outputSettings()}
+              onOutputChange={setOutputSettings}
+              selections={lutSelections()}
+              onSelectionChange={handleLutSelectionChange}
             />
           </div>
-          <div class="flex-1 min-h-0 overflow-y-auto">
-            <VideoList
-              videos={videos()}
-              loading={loading()}
-              onToggleSelect={toggleSelect}
-            />
-          </div>
-          <div class="flex items-center justify-between border-t border-gray-200 px-3 py-2">
-            <span class="text-xs text-gray-500">
-              {selectedCount()} of {totalCount()} selected
+        </div>
+
+        {/* Footer */}
+        <footer class="flex items-center gap-4 border-t border-gray-200 bg-white px-4 py-3">
+          {/* Validation warning */}
+          {missingLutCameras().length > 0 && selectedCount() > 0 && (
+            <span class="text-xs text-amber-600 shrink-0">
+              No LUT for:{' '}
+              {missingLutCameras()
+                .map(c => c.display)
+                .join(', ')}
             </span>
-            <button
-              onClick={toggleSelectAll}
-              disabled={totalCount() === 0}
-              class="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {selectedCount() === totalCount() && totalCount() > 0
-                ? 'Deselect all'
-                : 'Select all'}
-            </button>
+          )}
+          {/* Progress bar */}
+          <div class="h-2 flex-1 rounded-full bg-gray-200">
+            <div
+              class="h-full rounded-full bg-blue-500 transition-all"
+              style={{
+                width: (() => {
+                  const p = exportProgress()
+                  if (!p) return '0%'
+                  const percent =
+                    ((p.fileIndex + (p.percent ?? 0) / 100) / p.totalFiles) * 100
+                  return `${Math.min(percent, 100)}%`
+                })()
+              }}
+            />
           </div>
-        </div>
-
-        {/* Right panel */}
-        <div class="flex-1 min-h-0 overflow-y-auto p-4">
-          <LutAssignment
-            cameras={uniqueCameras()}
-            luts={luts()}
-            onLutsAdded={fetchLuts}
-            outputSettings={outputSettings()}
-            onOutputChange={setOutputSettings}
-            selections={lutSelections()}
-            onSelectionChange={handleLutSelectionChange}
-          />
-        </div>
+          {/* Progress text */}
+          {(() => {
+            const p = exportProgress()
+            if (!exporting() || !p) return null
+            return (
+              <span class="text-xs text-gray-500 shrink-0 max-w-[180px] truncate">
+                {p.fileIndex + 1}/{p.totalFiles} {p.filename}
+              </span>
+            )
+          })()}
+          {/* Export button */}
+          <button
+            onClick={() => void handleExport()}
+            disabled={!canExport()}
+            class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+          >
+            {exporting()
+              ? `Exporting… ${(exportProgress()?.fileIndex ?? 0) + 1}/${selectedCount()}`
+              : `Export ${selectedCount()} clip${selectedCount() !== 1 ? 's' : ''}`}
+          </button>
+        </footer>
       </div>
-
-      {/* Footer */}
-      <footer class="flex items-center gap-4 border-t border-gray-200 bg-white px-4 py-3">
-        {/* Validation warning */}
-        {missingLutCameras().length > 0 && selectedCount() > 0 && (
-          <span class="text-xs text-amber-600 shrink-0">
-            No LUT for:{' '}
-            {missingLutCameras()
-              .map(c => c.display)
-              .join(', ')}
-          </span>
-        )}
-        {/* Progress bar */}
-        <div class="h-2 flex-1 rounded-full bg-gray-200">
-          <div
-            class="h-full rounded-full bg-blue-500 transition-all"
-            style={{
-              width: (() => {
-                const p = exportProgress()
-                if (!p) return '0%'
-                const percent =
-                  ((p.fileIndex + (p.percent ?? 0) / 100) / p.totalFiles) * 100
-                return `${Math.min(percent, 100)}%`
-              })()
-            }}
-          />
-        </div>
-        {/* Progress text */}
-        {(() => {
-          const p = exportProgress()
-          if (!exporting() || !p) return null
-          return (
-            <span class="text-xs text-gray-500 shrink-0 max-w-[180px] truncate">
-              {p.fileIndex + 1}/{p.totalFiles} {p.filename}
-            </span>
-          )
-        })()}
-        {/* Export button */}
-        <button
-          onClick={() => void handleExport()}
-          disabled={!canExport()}
-          class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
-        >
-          {exporting()
-            ? `Exporting… ${(exportProgress()?.fileIndex ?? 0) + 1}/${selectedCount()}`
-            : `Export ${selectedCount()} clip${selectedCount() !== 1 ? 's' : ''}`}
-        </button>
-      </footer>
-    </div>
+    </Show>
   )
 }
 

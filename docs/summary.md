@@ -126,11 +126,14 @@ The app detects available hardware encoders at launch and selects the best optio
 
 ## UI Design
 
-Single-screen layout with three zones:
+Two-screen flow:
 
-- **Left panel** — directory picker and scrollable file list. Each file shows filename, resolution, framerate, file size, and a camera badge. Files can be individually deselected.
+**Screen 1 — Welcome:** Full-screen centered layout shown on launch and when no directory is selected. Contains the app name ("Flut"), a short tagline, and a prominent "Select Folder" button. Users can also click the folder path text in the left panel to change folders at any time.
+
+**Screen 2 — Main app:** Single-screen layout with three zones, shown after a directory is selected:
+- **Left panel** — folder name with a back button (returns to welcome screen), scrollable file list with filename, resolution, framerate, file size, and camera badge. Files can be individually deselected. During export, each file shows a per-file progress bar; after export, a green checkmark (success) or red X (error) replaces the checkbox.
 - **Right panel** — LUT assignment grouped by detected camera, plus output settings (destination folder, filename suffix, overwrite toggle).
-- **Footer** — export button (labelled with clip count) and progress bar.
+- **Footer** — export button (labelled with clip count) and global progress bar.
 
 ### Output Settings (v1)
 
