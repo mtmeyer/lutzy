@@ -1,5 +1,6 @@
 import DirectoryPicker from '@components/DirectoryPicker'
 import type { DropdownOption } from '@components/Dropdown'
+import ExportCompleteModal from '@components/ExportCompleteModal'
 import LutAssignment from '@components/LutAssignment'
 import VideoList from '@components/VideoList'
 import WelcomeScreen from '@components/WelcomeScreen'
@@ -43,6 +44,7 @@ const App: Component = () => {
   const [fileProgress, setFileProgress] = createSignal<
     Record<string, { state: string; percent: number }>
   >({})
+  const [showExportComplete, setShowExportComplete] = createSignal(false)
 
   const fetchLuts = () => {
     invoke<LutFile[]>('get_luts')
@@ -75,6 +77,7 @@ const App: Component = () => {
 
       if (p.status === 'complete') {
         setExporting(false)
+        setShowExportComplete(true)
       }
     }).then(unlisten => {
       onCleanup(unlisten)
@@ -132,6 +135,16 @@ const App: Component = () => {
     setExporting(false)
     setExportProgress(null)
     setFileProgress({})
+    setShowExportComplete(false)
+  }
+
+  const handleNewBatch = () => {
+    setShowExportComplete(false)
+    clearAndGoBack()
+  }
+
+  const handleCloseModal = () => {
+    setShowExportComplete(false)
   }
 
   const toggleSelect = (path: string) => {
@@ -320,6 +333,15 @@ const App: Component = () => {
               : `Export ${selectedCount()} clip${selectedCount() !== 1 ? 's' : ''}`}
           </button>
         </footer>
+
+        <Show when={showExportComplete()}>
+          <ExportCompleteModal
+            fileProgress={fileProgress()}
+            totalFiles={selectedCount()}
+            onNewBatch={handleNewBatch}
+            onClose={handleCloseModal}
+          />
+        </Show>
       </div>
     </Show>
   )
