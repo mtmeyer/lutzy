@@ -50,6 +50,11 @@ function getExtForCodec(codec: string) {
   return CODEC_EXT_OPTIONS[codec] ?? { options: SAME_SOURCE_EXT, default: 'same' }
 }
 
+function folderLabel(path: string): string {
+  const parts = path.replace(/[/\\]+$/, '').split(/[/\\]/)
+  return parts.slice(-2).join('/')
+}
+
 const LutAssignment: Component<LutAssignmentProps> = props => {
   const [adding, setAdding] = createSignal(false)
 
@@ -135,8 +140,62 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
             <div class="divide-y divide-gray-100">
               <div class="flex items-center justify-between px-3 py-2.5">
                 <span class="text-sm text-gray-500">Destination</span>
-                <span class="text-sm text-gray-800">same dir</span>
+                <div class="w-40">
+                  <Dropdown
+                    options={[
+                      { label: 'Same as source', value: 'same' },
+                      { label: 'Custom folder', value: 'custom' }
+                    ]}
+                    value={
+                      props.outputSettings.destination === 'custom'
+                        ? { label: 'Custom folder', value: 'custom' }
+                        : { label: 'Same as source', value: 'same' }
+                    }
+                    onChange={option => {
+                      const dest = option?.value ?? 'same'
+                      props.onOutputChange({
+                        ...props.outputSettings,
+                        destination: dest as 'same' | 'custom',
+                        customPath: dest === 'custom' ? props.outputSettings.customPath : ''
+                      })
+                    }}
+                  />
+                </div>
               </div>
+              <Show when={props.outputSettings.destination === 'custom'}>
+                <div class="flex items-center justify-between px-3 py-2.5">
+                  <span class="text-sm text-gray-500">Folder</span>
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="max-w-[140px] truncate text-sm text-gray-800"
+                      title={props.outputSettings.customPath || 'No folder selected'}
+                    >
+                      {props.outputSettings.customPath
+                        ? folderLabel(props.outputSettings.customPath)
+                        : 'No folder selected'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        void open({
+                          directory: true,
+                          multiple: false,
+                          title: 'Select output folder'
+                        }).then(selected => {
+                          if (selected) {
+                            props.onOutputChange({
+                              ...props.outputSettings,
+                              customPath: selected
+                            })
+                          }
+                        })
+                      }}
+                      class="shrink-0 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+                    >
+                      Browse
+                    </button>
+                  </div>
+                </div>
+              </Show>
               <div class="flex items-center justify-between px-3 py-2.5">
                 <span class="text-sm text-gray-500">Suffix</span>
                 <InputField
