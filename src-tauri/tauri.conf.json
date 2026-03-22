@@ -1,18 +1,18 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MyApp",
+  "productName": "Lutzy",
   "version": "2.0.0",
-  "identifier": "com.tauri-solid-ts-tailwind-vite.dev",
+  "identifier": "com.lutzy",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "LUT Applicator",
+        "title": "Lutzy",
         "width": 1200,
         "height": 800,
         "resizable": true

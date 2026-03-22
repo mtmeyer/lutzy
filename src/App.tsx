@@ -234,7 +234,7 @@ const App: Component = () => {
       <div class="flex flex-col h-screen bg-gray-50 text-gray-900">
         {/* Header */}
         <header class="flex items-center border-b border-gray-200 bg-white px-4 py-2">
-          <span class="text-sm font-semibold tracking-wide text-gray-800">Flut</span>
+          <span class="text-sm font-semibold tracking-wide text-gray-800">Lutzy</span>
         </header>
 
         {/* Main area */}

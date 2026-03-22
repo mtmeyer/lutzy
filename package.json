@@ -1,8 +1,15 @@
 {
-  "name": "tauri-solid-tailwind-ts-vite-template",
+  "name": "lutzy",
   "version": "2.0.0",
-  "author": "AR10",
+  "author": "mtmeyer",
+  "description": "Desktop utility for batch-applying colour LUTs to video files",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mtmeyer/lutzy"
+  },
+  "homepage": "https://github.com/mtmeyer/lutzy#readme",
+  "bugs": "https://github.com/mtmeyer/lutzy/issues",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",

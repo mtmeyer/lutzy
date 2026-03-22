@@ -1,95 +1,49 @@
-# [Tauri](https://tauri.app) + [Solid](https://solidjs.com) + [Tailwind CSS](https://tailwindcss.com) + [TypeScript](https://typescriptlang.org) + [Vite](https://vitejs.dev) Starter
+# Lutzy
 
-[//]:[![Stars](https://img.shields.io/github/stars/AR10Dev/tauri-solid-ts-tailwind-vite?style=social)](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite)
-[![Rust](https://img.shields.io/badge/Rust-black?style=for-the-badge&logo=rust&logoColor=#E57324)](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite)
-[![Typescript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite)
-[![Solid JS](https://img.shields.io/badge/SolidJS-2C4F7C?style=for-the-badge&logo=solid&logoColor=white)](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite)
-[![Tauri](https://img.shields.io/badge/Tauri-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite)
-
-A starter template for [Tauri](https://tauri.app) + [Solid](https://solidjs.com) App that comes preconfigured with [Vite](https://vitejs.dev),
-[TypeScript](https://typescriptlang.org), [Tailwind CSS](https://tailwindcss.com), [ESLint](https://eslint.org), [Prettier](https://prettier.io) and HMR (Hot Module Replacement).
+Desktop utility for batch-applying colour LUTs to video files. Point it at a directory, confirm LUT assignments, and export. Lutzy remembers the last-used LUT per camera model, so repeat jobs need zero configuration.
 
 ## Features
 
-- 🤩 [Tauri](https://tauri.app) - Build smaller, faster, and more secure desktop and mobile applications with a web frontend.
+- **Batch processing** — drop a folder of video files and apply LUTs to all of them in one go
+- **Per-camera LUT memory** — automatically recalls the last LUT used for each detected camera model
+- **Camera auto-detection** — reads metadata tags from video files via ffprobe to identify camera make/model
+- **Hardware acceleration** — uses platform-native GPU decode/encode (VideoToolbox, NVENC, QSV, AMF) where available
+- **.cube LUT support** — industry-standard 3D LUT files
+- **Progress tracking** — per-file and global progress bars during export
 
-- ⚡️ [Solid](https://solidjs.com) & [Vite](https://vitejs.dev) - Simple and performant reactivity for building user interfaces.
+## Prerequisites
 
-- 🎨 [Tailwind CSS](https://tailwindcss.com) - A utility-first CSS framework for rapid UI development.
+- [Rust](https://www.rust-lang.org/tools/install) (stable)
+- [Node.js](https://nodejs.org/) v22+
+- Tauri [system requirements](https://tauri.app/start/prerequisites/)
 
-- 💪 [TypeScript](https://typescriptlang.org) - it's JavaScript with syntax for types.
-
-- 👌 [ESLint](https://eslint.org) + [Prettier](https://prettier.io) - ESLint find problems in your code and Prettier format your code for an easy life.
-
-<br>
-
-## Getting started
-
-### GitHub Template
-
-[Create a repo from this template on GitHub](https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite/generate)
-
-### Clone to local
-
-If you prefer to do it manually with the cleaner git history
+## Development
 
 ```bash
-npx degit AR10Dev/tauri-solid-ts-tailwind-vite my-app # or bunx degit AR10Dev/tauri-solid-ts-tailwind-vite my-app
-cd my-app
-npm install # or pnpm install or yarn install or bun install
+npm install
+npm run tauri dev
 ```
 
-### Note
-For use Tauri you need to Setup your environment following this [guide](https://tauri.app/start/prerequisites/)
+First run will take a few minutes to download and compile Rust dependencies. Subsequent runs only rebuild your changes.
 
-## Checklist
-
-When you use this template, follow the checklist to update your info properly
-
-- [ ] Rename `name`, `version` and `author` field in `package.json`
-- [ ] Rename `name`, `version`, `description`, `authors` and `repository` field in `src-tauri/Cargo.toml`
-- [ ] Change the author name in `LICENSE`
-- [ ] Clean up the READMEs
-- [ ] Optional: Remove the `.github` folder which contains the github action for cross compilation
-- [ ] Optional: Remove the `.devcontainer` folder which contains the devcontainer for VSCode
-- [ ] Enjoy 😉
-
-## Usage
-
-### Development
+## Building
 
 ```bash
-npm run dev:tauri # or pnpm dev:tauri or yarn dev:tauri or bun dev:tauri
+npm run tauri build
 ```
 
-Runs the app in the development mode.<br>
+The binary is at `src-tauri/target/release/lutzy`. Installers are in `src-tauri/target/release/bundle/`.
 
-The first time you run this command, it will take several minutes for the Rust package manager to download and build all the required packages. Since they are cached, subsequent builds will be much faster, as only your code will need rebuilding.<br>
+## Architecture
 
-If you make edits to the page in the webview, it should update automatically, just like a browser would reload. When you make edits to the Rust files, they will be rebuilt automatically, and your app will restart.<br>
+- **Desktop framework:** [Tauri 2](https://tauri.app)
+- **Frontend:** [React](https://react.dev) + [TypeScript](https://www.typescriptlang.org) + [Tailwind CSS](https://tailwindcss.com)
+- **Backend:** Rust
+- **Video processing:** FFmpeg via [ffmpeg-sidecar](https://github.com/nicholasgasior/ffmpeg-sidecar) (bundled)
+- **Persistence:** SQLite via [rusqlite](https://github.com/rusqlite/rusqlite)
 
-### Build
+For a detailed architecture overview, see [docs/summary.md](docs/summary.md).
 
-```bash
-npm run build:tauri # or pnpm build:tauri or yarn build:tauri or bun build:tauri
-```
+## License
 
-Builds Solid to the `dist` folder and after will embed it into a single binary with your Rust code.<br>
-The binary itself will be located in `src-tauri/target/release/[app name]`, and installers will be located in `src-tauri/target/release/bundle/`<br>
-
-Like the `dev:tauri` command, the first time you run this, it will take some time to collect the Rust crates and build everything, but on subsequent runs, it will only need to rebuild your code, which is much quicker.<br>
-
-It correctly bundles Solid in production mode and optimizes the binary for the best performance.<br>
-
-🎉 Congratulations, your app is ready to be release!
-
-## Custom App Icon
-To generate your custom app icon you can follow this [guide](https://tauri.app/reference/cli/#icon).<br>
-Your new app icons will be located in `src-tauri/icons/` and remeber to update the `icon` field in `src-tauri/tauri.conf.json` with all your new icon path names.<br>
-
-## Customize the tauri.conf.json
-
-To modify and personalize your app, you need to edit `src-tauri/tauri.conf.json` by following this [guide](https://tauri.app/develop/configuration-files/)
+[MIT](LICENSE)

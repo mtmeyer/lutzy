@@ -1,4 +1,4 @@
-# LUT Applicator — Project Summary
+# Lutzy — Project Summary
 
 ## Overview
 
@@ -24,7 +24,7 @@ A desktop application for batch-applying LUTs to video files. The core workflow 
 ### Project Structure
 
 ```
-lut-applicator/
+lutzy/
 ├── src/                        # React frontend
 │   ├── App.tsx
 │   └── components/
@@ -128,7 +128,7 @@ The app detects available hardware encoders at launch and selects the best optio
 
 Two-screen flow:
 
-**Screen 1 — Welcome:** Full-screen centered layout shown on launch and when no directory is selected. Contains the app name ("Flut"), a short tagline, and a prominent "Select Folder" button. Users can also click the folder path text in the left panel to change folders at any time.
+**Screen 1 — Welcome:** Full-screen centered layout shown on launch and when no directory is selected. Contains the app name ("Lutzy"), a short tagline, and a prominent "Select Folder" button. Users can also click the folder path text in the left panel to change folders at any time.
 
 **Screen 2 — Main app:** Single-screen layout with three zones, shown after a directory is selected:
 - **Left panel** — folder name with a back button (returns to welcome screen), scrollable file list with filename, resolution, framerate, file size, and camera badge. Files can be individually deselected. During export, each file shows a per-file progress bar; after export, a green checkmark (success) or red X (error) replaces the checkbox.
@@ -152,3 +152,4 @@ Two-screen flow:
 - **GPU LUT processing** — Metal compute shader on macOS for full GPU pipeline on very high resolution formats (6K+)
 - **Watch folder mode** — automatically process new files dropped into a monitored directory
 - **LUT library management** — organise and tag frequently used LUTs within the app
+- **Images** - Apply LUTs to images as well as videos

@@ -1,18 +1,18 @@
 [package]
-name = "app"
+name = "lutzy"
 version = "2.0.0"
-description = "A Tauri Solid TypeScript Tailwind Vite App Template"
-authors = ["AR10"]
+description = "Desktop utility for batch-applying colour LUTs to video files"
+authors = ["mtmeyer"]
 license = "MIT"
-repository = "https://github.com/AR10Dev/tauri-solid-ts-tailwind-vite"
-default-run = "app"
+repository = "https://github.com/mtmeyer/lutzy"
+default-run = "lutzy"
 edition = "2024"
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "app_lib"
+name = "lutzy_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 
