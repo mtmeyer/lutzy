@@ -1,16 +1,8 @@
 import { open } from '@tauri-apps/plugin-dialog'
 import type { Component } from 'solid-js'
+import { folderName } from '../utils'
 
 interface DirectoryPickerProps {
-  directory: string | null
-  onDirectoryChange: (path: string | null) => void
-  onBack: () => void
-}
-
-function folderName(path: string): string {
-  const parts = path.replace(/[/\\]+$/, '').split(/[/\\]/)
-  return parts[parts.length - 1] || path
-}
 
 const DirectoryPicker: Component<DirectoryPickerProps> = props => {
   const pickDirectory = () => {

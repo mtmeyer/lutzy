@@ -72,15 +72,6 @@ fn migrate(conn: &Connection) -> Result<()> {
 
 // -- camera_luts CRUD --
 
-pub fn get_lut(conn: &Connection, camera_key: &str) -> Option<(String, String)> {
-    conn.query_row(
-        "SELECT lut_path, last_used FROM camera_luts WHERE camera_key = ?1",
-        params![camera_key],
-        |row| Ok((row.get(0)?, row.get(1)?)),
-    )
-    .ok()
-}
-
 pub fn set_lut(conn: &Connection, camera_key: &str, lut_path: &str) -> Result<()> {
     conn.execute(
         "INSERT INTO camera_luts (camera_key, lut_path, last_used)

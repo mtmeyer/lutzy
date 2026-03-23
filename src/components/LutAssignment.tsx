@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import { createMemo, createSignal, For, Show, type Component } from 'solid-js'
 import type { LutFile, OutputSettings } from '../types'
+import { getExtForCodec, folderLabel } from '../utils'
 import Dropdown, { type DropdownOption } from './Dropdown'
 import InputField from './InputField'
 import Toggle from './Toggle'
@@ -14,45 +15,6 @@ interface LutAssignmentProps {
   onOutputChange: (settings: OutputSettings) => void
   selections: Record<string, DropdownOption | null>
   onSelectionChange: (cameraKey: string, option: DropdownOption | null) => void
-}
-
-const CODEC_EXT_OPTIONS: Record<string, { options: DropdownOption[]; default: string }> = {
-  h264: {
-    options: [
-      { label: 'mp4', value: 'mp4' },
-      { label: 'mkv', value: 'mkv' },
-      { label: 'mov', value: 'mov' }
-    ],
-    default: 'mp4'
-  },
-  h265: {
-    options: [
-      { label: 'mp4', value: 'mp4' },
-      { label: 'mkv', value: 'mkv' },
-      { label: 'mov', value: 'mov' }
-    ],
-    default: 'mp4'
-  },
-  prores: {
-    options: [
-      { label: 'mov', value: 'mov' },
-      { label: 'mkv', value: 'mkv' }
-    ],
-    default: 'mov'
-  }
-}
-
-const SAME_SOURCE_EXT: DropdownOption[] = [
-  { label: 'same as source', value: 'same' }
-]
-
-function getExtForCodec(codec: string) {
-  return CODEC_EXT_OPTIONS[codec] ?? { options: SAME_SOURCE_EXT, default: 'same' }
-}
-
-function folderLabel(path: string): string {
-  const parts = path.replace(/[/\\]+$/, '').split(/[/\\]/)
-  return parts.slice(-2).join('/')
 }
 
 const LutAssignment: Component<LutAssignmentProps> = props => {

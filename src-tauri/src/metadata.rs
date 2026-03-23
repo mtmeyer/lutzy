@@ -14,28 +14,28 @@ pub struct VideoMetadata {
 }
 
 #[derive(Debug, Deserialize)]
-struct FfprobeOutput {
-    streams: Option<Vec<FfprobeStream>>,
-    format: Option<FfprobeFormat>,
+pub(crate) struct FfprobeOutput {
+    pub(crate) streams: Option<Vec<FfprobeStream>>,
+    pub(crate) format: Option<FfprobeFormat>,
 }
 
 #[derive(Debug, Deserialize)]
-struct FfprobeStream {
-    codec_name: Option<String>,
-    codec_type: Option<String>,
-    width: Option<u64>,
-    height: Option<u64>,
-    r_frame_rate: Option<String>,
-    avg_frame_rate: Option<String>,
-    bit_rate: Option<String>,
-    tags: Option<std::collections::HashMap<String, String>>,
+pub(crate) struct FfprobeStream {
+    pub(crate) codec_name: Option<String>,
+    pub(crate) codec_type: Option<String>,
+    pub(crate) width: Option<u64>,
+    pub(crate) height: Option<u64>,
+    pub(crate) r_frame_rate: Option<String>,
+    pub(crate) avg_frame_rate: Option<String>,
+    pub(crate) bit_rate: Option<String>,
+    pub(crate) tags: Option<std::collections::HashMap<String, String>>,
 }
 
 #[derive(Debug, Deserialize)]
-struct FfprobeFormat {
-    duration: Option<String>,
-    bit_rate: Option<String>,
-    tags: Option<std::collections::HashMap<String, String>>,
+pub(crate) struct FfprobeFormat {
+    pub(crate) duration: Option<String>,
+    pub(crate) bit_rate: Option<String>,
+    pub(crate) tags: Option<std::collections::HashMap<String, String>>,
 }
 
 pub fn probe_video(path: &str) -> Result<VideoMetadata, String> {
@@ -80,7 +80,7 @@ pub fn probe_video(path: &str) -> Result<VideoMetadata, String> {
     })
 }
 
-fn extract_resolution(json: &FfprobeOutput) -> String {
+pub(crate) fn extract_resolution(json: &FfprobeOutput) -> String {
     if let Some(ref streams) = json.streams {
         for stream in streams {
             if stream.codec_type.as_deref() == Some("video") {
@@ -93,7 +93,7 @@ fn extract_resolution(json: &FfprobeOutput) -> String {
     String::new()
 }
 
-fn extract_framerate(json: &FfprobeOutput) -> f64 {
+pub(crate) fn extract_framerate(json: &FfprobeOutput) -> f64 {
     if let Some(ref streams) = json.streams {
         for stream in streams {
             if stream.codec_type.as_deref() == Some("video") {
@@ -117,7 +117,7 @@ fn extract_framerate(json: &FfprobeOutput) -> f64 {
     0.0
 }
 
-fn extract_duration(json: &FfprobeOutput) -> f64 {
+pub(crate) fn extract_duration(json: &FfprobeOutput) -> f64 {
     if let Some(ref format) = json.format {
         if let Some(ref dur_str) = format.duration {
             return dur_str.parse::<f64>().unwrap_or(0.0);
@@ -126,7 +126,7 @@ fn extract_duration(json: &FfprobeOutput) -> f64 {
     0.0
 }
 
-fn extract_video_codec(json: &FfprobeOutput) -> String {
+pub(crate) fn extract_video_codec(json: &FfprobeOutput) -> String {
     if let Some(ref streams) = json.streams {
         for stream in streams {
             if stream.codec_type.as_deref() == Some("video") {
@@ -139,7 +139,7 @@ fn extract_video_codec(json: &FfprobeOutput) -> String {
     String::new()
 }
 
-fn extract_bit_rate(json: &FfprobeOutput) -> Option<u64> {
+pub(crate) fn extract_bit_rate(json: &FfprobeOutput) -> Option<u64> {
     if let Some(ref streams) = json.streams {
         for stream in streams {
             if stream.codec_type.as_deref() == Some("video") {
@@ -165,7 +165,9 @@ fn extract_bit_rate(json: &FfprobeOutput) -> Option<u64> {
     None
 }
 
-fn collect_camera_tags(json: &FfprobeOutput) -> std::collections::HashMap<String, String> {
+pub(crate) fn collect_camera_tags(
+    json: &FfprobeOutput,
+) -> std::collections::HashMap<String, String> {
     use std::collections::HashMap;
 
     let mut tags: HashMap<String, String> = HashMap::new();
@@ -193,7 +195,7 @@ fn collect_camera_tags(json: &FfprobeOutput) -> std::collections::HashMap<String
     tags
 }
 
-fn extract_camera_info(json: &FfprobeOutput, path: &str) -> (String, String) {
+pub(crate) fn extract_camera_info(json: &FfprobeOutput, path: &str) -> (String, String) {
     let tags = collect_camera_tags(json);
 
     // 1. com.apple.quicktime.model
@@ -239,13 +241,13 @@ fn extract_camera_info(json: &FfprobeOutput, path: &str) -> (String, String) {
     }
 }
 
-fn clean_display(raw: &str) -> String {
+pub(crate) fn clean_display(raw: &str) -> String {
     // Trim and collapse whitespace
     let parts: Vec<&str> = raw.split_whitespace().collect();
     parts.join(" ")
 }
 
-fn slugify_key(input: &str) -> String {
+pub(crate) fn slugify_key(input: &str) -> String {
     let mut result = String::with_capacity(input.len());
     let mut last_was_underscore = true; // skip leading underscores
 
@@ -267,7 +269,7 @@ fn slugify_key(input: &str) -> String {
     result
 }
 
-fn parse_fraction(s: &str) -> Option<f64> {
+pub(crate) fn parse_fraction(s: &str) -> Option<f64> {
     if let Some((num_str, den_str)) = s.split_once('/') {
         let num: f64 = num_str.parse().ok()?;
         let den: f64 = den_str.parse().ok()?;
@@ -276,4 +278,522 @@ fn parse_fraction(s: &str) -> Option<f64> {
         }
     }
     s.parse().ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    // --- helpers ---
+
+    fn video_stream(
+        codec_name: &str,
+        width: u64,
+        height: u64,
+        r_frame_rate: &str,
+        avg_frame_rate: &str,
+        bit_rate: &str,
+    ) -> FfprobeStream {
+        FfprobeStream {
+            codec_name: Some(codec_name.to_string()),
+            codec_type: Some("video".to_string()),
+            width: Some(width),
+            height: Some(height),
+            r_frame_rate: Some(r_frame_rate.to_string()),
+            avg_frame_rate: Some(avg_frame_rate.to_string()),
+            bit_rate: Some(bit_rate.to_string()),
+            tags: None,
+        }
+    }
+
+    fn audio_stream() -> FfprobeStream {
+        FfprobeStream {
+            codec_name: Some("aac".to_string()),
+            codec_type: Some("audio".to_string()),
+            width: None,
+            height: None,
+            r_frame_rate: None,
+            avg_frame_rate: None,
+            bit_rate: None,
+            tags: None,
+        }
+    }
+
+    fn make_json(
+        streams: Option<Vec<FfprobeStream>>,
+        format: Option<FfprobeFormat>,
+    ) -> FfprobeOutput {
+        FfprobeOutput { streams, format }
+    }
+
+    // --- parse_fraction ---
+
+    #[test]
+    fn fraction_standard_ntsc() {
+        assert!((parse_fraction("30000/1001").unwrap() - 29.97).abs() < 0.01);
+    }
+
+    #[test]
+    fn fraction_integer_fps() {
+        assert_eq!(parse_fraction("24/1"), Some(24.0));
+    }
+
+    #[test]
+    fn fraction_plain_number() {
+        assert_eq!(parse_fraction("25"), Some(25.0));
+    }
+
+    #[test]
+    fn fraction_zero_denominator() {
+        assert_eq!(parse_fraction("0/0"), None);
+    }
+
+    #[test]
+    fn fraction_malformed() {
+        assert_eq!(parse_fraction("abc"), None);
+    }
+
+    #[test]
+    fn fraction_empty() {
+        assert_eq!(parse_fraction(""), None);
+    }
+
+    // --- slugify_key ---
+
+    #[test]
+    fn slugify_basic() {
+        assert_eq!(slugify_key("Sony ILME-FX3"), "sony_ilme_fx3");
+    }
+
+    #[test]
+    fn slugify_empty() {
+        assert_eq!(slugify_key(""), "");
+    }
+
+    #[test]
+    fn slugify_special_chars_only() {
+        assert_eq!(slugify_key("---"), "");
+    }
+
+    #[test]
+    fn slugify_leading_trailing_spaces() {
+        assert_eq!(slugify_key("  Sony  "), "sony");
+    }
+
+    #[test]
+    fn slugify_collapses_underscores() {
+        assert_eq!(slugify_key("a---b---c"), "a_b_c");
+    }
+
+    // --- clean_display ---
+
+    #[test]
+    fn clean_display_collapses_whitespace() {
+        assert_eq!(clean_display("  Sony   ILME-FX3  "), "Sony ILME-FX3");
+    }
+
+    #[test]
+    fn clean_display_empty() {
+        assert_eq!(clean_display(""), "");
+    }
+
+    #[test]
+    fn clean_display_only_spaces() {
+        assert_eq!(clean_display("   "), "");
+    }
+
+    // --- extract_resolution ---
+
+    #[test]
+    fn resolution_from_video_stream() {
+        let json = make_json(
+            Some(vec![video_stream(
+                "h264", 1920, 1080, "30/1", "30/1", "5000000",
+            )]),
+            None,
+        );
+        assert_eq!(extract_resolution(&json), "1920x1080");
+    }
+
+    #[test]
+    fn resolution_skips_audio_stream() {
+        let json = make_json(Some(vec![audio_stream()]), None);
+        assert_eq!(extract_resolution(&json), "");
+    }
+
+    #[test]
+    fn resolution_no_streams() {
+        let json = make_json(None, None);
+        assert_eq!(extract_resolution(&json), "");
+    }
+
+    #[test]
+    fn resolution_4k() {
+        let json = make_json(
+            Some(vec![video_stream("h264", 3840, 2160, "24/1", "24/1", "")]),
+            None,
+        );
+        assert_eq!(extract_resolution(&json), "3840x2160");
+    }
+
+    // --- extract_framerate ---
+
+    #[test]
+    fn framerate_from_r_frame_rate() {
+        let json = make_json(
+            Some(vec![video_stream("h264", 1920, 1080, "30/1", "30/1", "")]),
+            None,
+        );
+        assert_eq!(extract_framerate(&json), 30.0);
+    }
+
+    #[test]
+    fn framerate_falls_back_to_avg() {
+        let json = make_json(
+            Some(vec![video_stream(
+                "h264",
+                1920,
+                1080,
+                "0/0",
+                "24000/1001",
+                "",
+            )]),
+            None,
+        );
+        assert!((extract_framerate(&json) - 23.976).abs() < 0.01);
+    }
+
+    #[test]
+    fn framerate_both_zero() {
+        let json = make_json(
+            Some(vec![video_stream("h264", 1920, 1080, "0/0", "0/0", "")]),
+            None,
+        );
+        assert_eq!(extract_framerate(&json), 0.0);
+    }
+
+    #[test]
+    fn framerate_no_streams() {
+        let json = make_json(None, None);
+        assert_eq!(extract_framerate(&json), 0.0);
+    }
+
+    // --- extract_duration ---
+
+    #[test]
+    fn duration_valid() {
+        let json = make_json(
+            None,
+            Some(FfprobeFormat {
+                duration: Some("123.456".to_string()),
+                bit_rate: None,
+                tags: None,
+            }),
+        );
+        assert!((extract_duration(&json) - 123.456).abs() < 0.001);
+    }
+
+    #[test]
+    fn duration_missing() {
+        let json = make_json(None, None);
+        assert_eq!(extract_duration(&json), 0.0);
+    }
+
+    #[test]
+    fn duration_non_numeric() {
+        let json = make_json(
+            None,
+            Some(FfprobeFormat {
+                duration: Some("invalid".to_string()),
+                bit_rate: None,
+                tags: None,
+            }),
+        );
+        assert_eq!(extract_duration(&json), 0.0);
+    }
+
+    // --- extract_video_codec ---
+
+    #[test]
+    fn codec_from_video_stream() {
+        let json = make_json(
+            Some(vec![video_stream("h264", 1920, 1080, "30/1", "30/1", "")]),
+            None,
+        );
+        assert_eq!(extract_video_codec(&json), "h264");
+    }
+
+    #[test]
+    fn codec_is_lowercased() {
+        let json = make_json(
+            Some(vec![video_stream("HEVC", 1920, 1080, "30/1", "30/1", "")]),
+            None,
+        );
+        assert_eq!(extract_video_codec(&json), "hevc");
+    }
+
+    #[test]
+    fn codec_no_video_stream() {
+        let json = make_json(Some(vec![audio_stream()]), None);
+        assert_eq!(extract_video_codec(&json), "");
+    }
+
+    #[test]
+    fn codec_picks_first_video_stream() {
+        let streams = vec![
+            audio_stream(),
+            video_stream("h264", 1920, 1080, "30/1", "30/1", ""),
+            video_stream("h265", 3840, 2160, "24/1", "24/1", ""),
+        ];
+        let json = make_json(Some(streams), None);
+        assert_eq!(extract_video_codec(&json), "h264");
+    }
+
+    // --- extract_bit_rate ---
+
+    #[test]
+    fn bitrate_from_stream() {
+        let json = make_json(
+            Some(vec![video_stream(
+                "h264", 1920, 1080, "30/1", "30/1", "5000000",
+            )]),
+            None,
+        );
+        assert_eq!(extract_bit_rate(&json), Some(5000000));
+    }
+
+    #[test]
+    fn bitrate_falls_back_to_format() {
+        let json = make_json(
+            Some(vec![video_stream("h264", 1920, 1080, "30/1", "30/1", "")]),
+            Some(FfprobeFormat {
+                duration: None,
+                bit_rate: Some("8000000".to_string()),
+                tags: None,
+            }),
+        );
+        assert_eq!(extract_bit_rate(&json), Some(8000000));
+    }
+
+    #[test]
+    fn bitrate_stream_wins_over_format() {
+        let json = make_json(
+            Some(vec![video_stream(
+                "h264", 1920, 1080, "30/1", "30/1", "5000000",
+            )]),
+            Some(FfprobeFormat {
+                duration: None,
+                bit_rate: Some("8000000".to_string()),
+                tags: None,
+            }),
+        );
+        assert_eq!(extract_bit_rate(&json), Some(5000000));
+    }
+
+    #[test]
+    fn bitrate_zero_is_none() {
+        let json = make_json(
+            Some(vec![video_stream("h264", 1920, 1080, "30/1", "30/1", "0")]),
+            None,
+        );
+        assert_eq!(extract_bit_rate(&json), None);
+    }
+
+    #[test]
+    fn bitrate_missing_is_none() {
+        let json = make_json(None, None);
+        assert_eq!(extract_bit_rate(&json), None);
+    }
+
+    // --- collect_camera_tags ---
+
+    #[test]
+    fn tags_format_overrides_stream() {
+        let mut stream_tags = HashMap::new();
+        stream_tags.insert("make".to_string(), "Sony".to_string());
+        let mut format_tags = HashMap::new();
+        format_tags.insert("make".to_string(), "SONY".to_string());
+
+        let json = make_json(
+            Some(vec![FfprobeStream {
+                codec_name: None,
+                codec_type: Some("video".to_string()),
+                width: None,
+                height: None,
+                r_frame_rate: None,
+                avg_frame_rate: None,
+                bit_rate: None,
+                tags: Some(stream_tags),
+            }]),
+            Some(FfprobeFormat {
+                duration: None,
+                bit_rate: None,
+                tags: Some(format_tags),
+            }),
+        );
+
+        let tags = collect_camera_tags(&json);
+        assert_eq!(tags.get("make").unwrap(), "SONY");
+    }
+
+    #[test]
+    fn tags_lowercased() {
+        let mut stream_tags = HashMap::new();
+        stream_tags.insert("Make".to_string(), "Sony".to_string());
+
+        let json = make_json(
+            Some(vec![FfprobeStream {
+                codec_name: None,
+                codec_type: Some("video".to_string()),
+                width: None,
+                height: None,
+                r_frame_rate: None,
+                avg_frame_rate: None,
+                bit_rate: None,
+                tags: Some(stream_tags),
+            }]),
+            None,
+        );
+
+        let tags = collect_camera_tags(&json);
+        assert!(tags.contains_key("make"));
+        assert!(!tags.contains_key("Make"));
+    }
+
+    // --- extract_camera_info ---
+
+    #[test]
+    fn camera_quicktime_model_priority() {
+        let mut tags = HashMap::new();
+        tags.insert(
+            "com.apple.quicktime.model".to_string(),
+            "iPhone 15 Pro".to_string(),
+        );
+        tags.insert("make".to_string(), "Apple".to_string());
+        tags.insert("model".to_string(), "iPhone".to_string());
+
+        let json = make_json(
+            Some(vec![FfprobeStream {
+                codec_name: None,
+                codec_type: Some("video".to_string()),
+                width: None,
+                height: None,
+                r_frame_rate: None,
+                avg_frame_rate: None,
+                bit_rate: None,
+                tags: Some(tags),
+            }]),
+            None,
+        );
+
+        let (key, display) = extract_camera_info(&json, "/test/video.mp4");
+        assert_eq!(key, "iphone_15_pro");
+        assert_eq!(display, "iPhone 15 Pro");
+    }
+
+    #[test]
+    fn camera_make_model_priority() {
+        let mut tags = HashMap::new();
+        tags.insert("make".to_string(), "Sony".to_string());
+        tags.insert("model".to_string(), "ILME-FX3".to_string());
+
+        let json = make_json(
+            Some(vec![FfprobeStream {
+                codec_name: None,
+                codec_type: Some("video".to_string()),
+                width: None,
+                height: None,
+                r_frame_rate: None,
+                avg_frame_rate: None,
+                bit_rate: None,
+                tags: Some(tags),
+            }]),
+            None,
+        );
+
+        let (key, display) = extract_camera_info(&json, "/test/video.mp4");
+        assert_eq!(key, "sony_ilme_fx3");
+        assert_eq!(display, "Sony ILME-FX3");
+    }
+
+    #[test]
+    fn camera_encoder_fallback() {
+        let mut tags = HashMap::new();
+        tags.insert("encoder".to_string(), "Canon EOS R5".to_string());
+
+        let json = make_json(
+            Some(vec![FfprobeStream {
+                codec_name: None,
+                codec_type: Some("video".to_string()),
+                width: None,
+                height: None,
+                r_frame_rate: None,
+                avg_frame_rate: None,
+                bit_rate: None,
+                tags: Some(tags),
+            }]),
+            None,
+        );
+
+        let (key, display) = extract_camera_info(&json, "/test/video.mp4");
+        assert_eq!(key, "canon_eos_r5");
+        assert_eq!(display, "Canon EOS R5");
+    }
+
+    #[test]
+    fn camera_braw_extension() {
+        let json = make_json(None, None);
+        let (key, display) = extract_camera_info(&json, "/test/clip.braw");
+        assert_eq!(key, "blackmagic");
+        assert_eq!(display, "Blackmagic");
+    }
+
+    #[test]
+    fn camera_r3d_extension() {
+        let json = make_json(None, None);
+        let (key, display) = extract_camera_info(&json, "/test/clip.r3d");
+        assert_eq!(key, "red");
+        assert_eq!(display, "RED");
+    }
+
+    #[test]
+    fn camera_mxf_extension() {
+        let json = make_json(None, None);
+        let (key, display) = extract_camera_info(&json, "/test/clip.mxf");
+        assert_eq!(key, "mxf");
+        assert_eq!(display, "MXF");
+    }
+
+    #[test]
+    fn camera_no_tags_returns_empty() {
+        let json = make_json(None, None);
+        let (key, display) = extract_camera_info(&json, "/test/video.mp4");
+        assert_eq!(key, "");
+        assert_eq!(display, "");
+    }
+
+    #[test]
+    fn camera_make_only() {
+        let mut tags = HashMap::new();
+        tags.insert("make".to_string(), "GoPro".to_string());
+
+        let json = make_json(
+            Some(vec![FfprobeStream {
+                codec_name: None,
+                codec_type: Some("video".to_string()),
+                width: None,
+                height: None,
+                r_frame_rate: None,
+                avg_frame_rate: None,
+                bit_rate: None,
+                tags: Some(tags),
+            }]),
+            None,
+        );
+
+        let (key, display) = extract_camera_info(&json, "/test/video.mp4");
+        assert_eq!(key, "gopro");
+        assert_eq!(display, "GoPro");
+    }
 }

@@ -34,6 +34,7 @@ pub fn parse_lut_label(path: &Path) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
 
     #[test]
     fn parse_example_lut() {
@@ -42,12 +43,11 @@ mod tests {
             .unwrap()
             .join("example-lut.cube");
         let label = parse_lut_label(&path);
-        assert_eq!(label, Some("GoPro_ProtuneFlat_to_Portra160".to_string()));
+        assert_eq!(label, Some("GoPro Flat Portra160".to_string()));
     }
 
     #[test]
     fn parse_copied_lut() {
-        // Simulate the full flow: copy file, then parse from destination
         let src = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .unwrap()
@@ -59,7 +59,7 @@ mod tests {
         std::fs::copy(&src, &dest).unwrap();
 
         let label = parse_lut_label(&dest);
-        assert_eq!(label, Some("GoPro_ProtuneFlat_to_Portra160".to_string()));
+        assert_eq!(label, Some("GoPro Flat Portra160".to_string()));
 
         std::fs::remove_dir_all(&tmp).unwrap();
     }
@@ -68,5 +68,50 @@ mod tests {
     fn parse_non_cube_returns_none() {
         let path = Path::new("/some/path/lut.3dl");
         assert_eq!(parse_lut_label(&path), None);
+    }
+
+    #[test]
+    fn parse_unquoted_title() {
+        let dir = std::env::temp_dir().join("lut_test_unquoted");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("test.cube");
+        let mut f = File::create(&path).unwrap();
+        writeln!(f, "TITLE My Custom LUT").unwrap();
+        writeln!(f, "LUT_3D_SIZE 33").unwrap();
+
+        let label = parse_lut_label(&path);
+        assert_eq!(label, Some("My Custom LUT".to_string()));
+
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn parse_no_title_returns_none() {
+        let dir = std::env::temp_dir().join("lut_test_notitle");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("test.cube");
+        let mut f = File::create(&path).unwrap();
+        writeln!(f, "LUT_3D_SIZE 33").unwrap();
+        writeln!(f, "DOMAIN_MIN 0.0 0.0 0.0").unwrap();
+
+        let label = parse_lut_label(&path);
+        assert_eq!(label, None);
+
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn parse_empty_title_returns_none() {
+        let dir = std::env::temp_dir().join("lut_test_emptytitle");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("test.cube");
+        let mut f = File::create(&path).unwrap();
+        writeln!(f, "TITLE ").unwrap();
+        writeln!(f, "LUT_3D_SIZE 33").unwrap();
+
+        let label = parse_lut_label(&path);
+        assert_eq!(label, None);
+
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

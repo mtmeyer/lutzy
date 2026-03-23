@@ -1,6 +1,7 @@
 import { createEffect, For, Show, type Component } from 'solid-js'
 import type { VideoFile } from '../types'
 import { AiOutlineCloseCircle, AiOutlineCheckCircle } from 'solid-icons/ai'
+import { formatResolution, formatFramerate, formatSize } from '../utils'
 
 interface FileProgressState {
   state: string
@@ -108,33 +109,6 @@ function CameraBadge(props: { display: string; key: string }) {
       {label}
     </span>
   )
-}
-
-function formatResolution(res: string): string {
-  if (!res) return '\u2014'
-  const match = res.match(/^(\d+)x(\d+)$/)
-  if (!match) return res
-  const h = parseInt(match[2], 10)
-  if (h >= 4320) return '8K'
-  if (h >= 3160) return '6K'
-  if (h >= 2160) return '4K'
-  if (h >= 1440) return 'QHD'
-  if (h >= 1080) return '1080p'
-  if (h >= 720) return '720p'
-  return res
-}
-
-function formatFramerate(fps: number): string {
-  // Show clean numbers: 23.98 → 23.98, 24.0 → 24, 25.0 → 25
-  if (fps % 1 === 0) return `${fps}`
-  return fps.toFixed(2)
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`
 }
 
 export default VideoList

@@ -4,7 +4,7 @@
 
 A desktop utility for batch-applying colour LUTs to video files. Not a colour grading tool — the goal is a minimal, fast workflow: select a directory, confirm LUT assignments, export. The app remembers the last-used LUT per camera model so repeat jobs need zero configuration.
 
-**Stack:** Tauri 2 · React + TypeScript · Rust · FFmpeg via `ffmpeg-sidecar` (bundled) · SQLite via `rusqlite`
+**Stack:** Tauri 2 · SolidJS + TypeScript · Rust · FFmpeg via `ffmpeg-sidecar` (bundled) · SQLite via `rusqlite`
 
 **Key decisions:**
 - FFmpeg/ffprobe are bundled as Tauri sidecars — no system dependency for users
