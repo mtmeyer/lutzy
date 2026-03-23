@@ -3,6 +3,10 @@ import type { Component } from 'solid-js'
 import { folderName } from '../utils'
 
 interface DirectoryPickerProps {
+  directory: string | null
+  onDirectoryChange: (path: string) => void
+  onBack: () => void
+}
 
 const DirectoryPicker: Component<DirectoryPickerProps> = props => {
   const pickDirectory = () => {
