@@ -349,7 +349,12 @@ const App: Component = () => {
             totalFiles={selectedCount()}
             onNewBatch={handleNewBatch}
           />
-          <SettingsModal open={showSettings()} onOpenChange={setShowSettings} />
+          <SettingsModal
+            open={showSettings()}
+            onOpenChange={setShowSettings}
+            luts={luts()}
+            onLutsChanged={fetchLuts}
+          />
         </div>
       </Show>
     </SettingsProvider>

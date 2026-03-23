@@ -140,3 +140,11 @@ pub fn delete_lut(conn: &Connection, id: i64) -> Result<()> {
     conn.execute("DELETE FROM luts WHERE id = ?1", params![id])?;
     Ok(())
 }
+
+pub fn update_lut_label(conn: &Connection, id: i64, label: &str) -> Result<()> {
+    conn.execute(
+        "UPDATE luts SET label = ?1 WHERE id = ?2",
+        params![label, id],
+    )?;
+    Ok(())
+}

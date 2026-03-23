@@ -32,6 +32,7 @@ pub fn run() {
             commands::get_luts,
             commands::get_camera_luts,
             commands::delete_lut,
+            commands::rename_lut,
             export::start_export
         ])
         .run(tauri::generate_context!())

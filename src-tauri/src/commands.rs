@@ -109,6 +109,13 @@ pub fn delete_lut(id: i64, app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn rename_lut(id: i64, label: String, app: AppHandle) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    db::update_lut_label(&conn, id, &label).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn get_camera_luts(app: AppHandle) -> Result<HashMap<String, String>, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| e.to_string())?;
