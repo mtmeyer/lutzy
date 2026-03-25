@@ -11,10 +11,10 @@ import {
   getCameraLuts,
   getAppSettings,
   setAppSetting,
-  scanDirectory,
   checkOverwrite
 } from './services/tauriApi'
 import { subscribeToExportProgress } from './services/events'
+import { useVideoBatch } from './features/videos/useVideoBatch'
 import { AiOutlineSetting } from 'solid-icons/ai'
 import {
   createEffect,
@@ -31,8 +31,7 @@ import type {
   ExportJob,
   ExportProgress,
   LutFile,
-  OutputSettings,
-  VideoFile
+  OutputSettings
 } from './types'
 import { resolveDarkMode } from './utils'
 
@@ -70,9 +69,7 @@ const ThemeApplier: Component<{ children: JSX.Element }> = props => {
 
 const AppContent: Component = () => {
   const { settings } = useSettings()
-  const [directory, setDirectory] = createSignal<string | null>(null)
-  const [videos, setVideos] = createSignal<VideoFile[]>([])
-  const [loading, setLoading] = createSignal(false)
+  const videoBatch = useVideoBatch()
   const [outputSettings, setOutputSettings] = createSignal<OutputSettings>({
     destination: 'same',
     customPath: '',
@@ -130,25 +127,10 @@ const AppContent: Component = () => {
     })
   })
 
-  const selectedVideos = createMemo(() => videos().filter(v => v.selected))
-  const selectedCount = createMemo(() => selectedVideos().length)
-  const totalCount = createMemo(() => videos().length)
-
-  const uniqueCameras = createMemo(() => {
-    const seen = new Set<string>()
-    const cameras: { key: string; display: string }[] = []
-    for (const v of selectedVideos()) {
-      const key = v.cameraKey || 'unknown'
-      if (!seen.has(key)) {
-        seen.add(key)
-        cameras.push({
-          key,
-          display: v.cameraDisplay || v.cameraKey || 'Unknown'
-        })
-      }
-    }
-    return cameras
-  })
+  const selectedVideos = videoBatch.selectedVideos
+  const selectedCount = videoBatch.selectedCount
+  const totalCount = videoBatch.totalCount
+  const uniqueCameras = videoBatch.uniqueCameras
 
   const missingLutCameras = createMemo(() => {
     if (!settings.perCameraLut) {
@@ -161,25 +143,10 @@ const AppContent: Component = () => {
     () => selectedCount() > 0 && !exporting() && missingLutCameras().length === 0
   )
 
-  const handleDirectoryChange = (path: string | null) => {
-    setDirectory(path)
-    if (!path) {
-      setVideos([])
-      return
-    }
-    setLoading(true)
-    scanDirectory(path)
-      .then(result => setVideos(result.map(v => ({ ...v, selected: true }))))
-      .catch(err => {
-        console.error('Scan failed:', err)
-        setVideos([])
-      })
-      .finally(() => setLoading(false))
-  }
+  const { handleDirectoryChange, clearAndGoBack, toggleSelect, toggleSelectAll, resetVideoBatch, directory, videos, loading } = videoBatch
 
-  const clearAndGoBack = () => {
-    setDirectory(null)
-    setVideos([])
+  const fullClearAndGoBack = () => {
+    resetVideoBatch()
     setLutSelections({})
     setExporting(false)
     setExportProgress(null)
@@ -189,18 +156,7 @@ const AppContent: Component = () => {
 
   const handleNewBatch = () => {
     setShowExportComplete(false)
-    clearAndGoBack()
-  }
-
-  const toggleSelect = (path: string) => {
-    setVideos(prev =>
-      prev.map(v => (v.path === path ? { ...v, selected: !v.selected } : v))
-    )
-  }
-
-  const toggleSelectAll = () => {
-    const allSelected = videos().every(v => v.selected)
-    setVideos(prev => prev.map(v => ({ ...v, selected: !allSelected })))
+    fullClearAndGoBack()
   }
 
   const handleLutSelectionChange = (cameraKey: string, option: DropdownOption | null) => {
