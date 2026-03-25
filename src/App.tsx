@@ -1,20 +1,14 @@
 import DirectoryPicker from '@components/DirectoryPicker'
-import type { DropdownOption } from '@components/Dropdown'
 import ExportCompleteModal from '@components/ExportCompleteModal'
 import FilenameCollisionModal from '@components/FilenameCollisionModal'
 import LutAssignment from '@components/LutAssignment'
 import SettingsModal from '@components/SettingsModal'
 import VideoList from '@components/VideoList'
 import WelcomeScreen from '@components/WelcomeScreen'
-import {
-  getLuts,
-  getCameraLuts,
-  getAppSettings,
-  setAppSetting,
-  checkOverwrite
-} from './services/tauriApi'
+import { checkOverwrite } from './services/tauriApi'
 import { subscribeToExportProgress } from './services/events'
 import { useVideoBatch } from './features/videos/useVideoBatch'
+import { useLutSelections } from './features/lut/useLutSelections'
 import { AiOutlineSetting } from 'solid-icons/ai'
 import {
   createEffect,
@@ -30,7 +24,6 @@ import { SettingsProvider, useSettings } from './stores/settings'
 import type {
   ExportJob,
   ExportProgress,
-  LutFile,
   OutputSettings
 } from './types'
 import { resolveDarkMode } from './utils'
@@ -70,6 +63,7 @@ const ThemeApplier: Component<{ children: JSX.Element }> = props => {
 const AppContent: Component = () => {
   const { settings } = useSettings()
   const videoBatch = useVideoBatch()
+  const lutSelections_ = useLutSelections(videoBatch)
   const [outputSettings, setOutputSettings] = createSignal<OutputSettings>({
     destination: 'same',
     customPath: '',
@@ -77,10 +71,6 @@ const AppContent: Component = () => {
     videoCodec: 'same',
     outputExtension: 'same'
   })
-  const [luts, setLuts] = createSignal<LutFile[]>([])
-  const [lutSelections, setLutSelections] = createSignal<
-    Record<string, DropdownOption | null>
-  >({})
   const [exporting, setExporting] = createSignal(false)
   const [exportProgress, setExportProgress] = createSignal<ExportProgress | null>(null)
   const [fileProgress, setFileProgress] = createSignal<
@@ -89,14 +79,6 @@ const AppContent: Component = () => {
   const [showExportComplete, setShowExportComplete] = createSignal(false)
   const [showSettings, setShowSettings] = createSignal(false)
   const [collisionPaths, setCollisionPaths] = createSignal<string[] | null>(null)
-
-  const fetchLuts = () => {
-    getLuts()
-      .then(result => setLuts(result))
-      .catch(err => console.error('Failed to fetch LUTs:', err))
-  }
-
-  onMount(fetchLuts)
 
   // Listen for export progress events
   onMount(() => {
@@ -131,13 +113,7 @@ const AppContent: Component = () => {
   const selectedCount = videoBatch.selectedCount
   const totalCount = videoBatch.totalCount
   const uniqueCameras = videoBatch.uniqueCameras
-
-  const missingLutCameras = createMemo(() => {
-    if (!settings.perCameraLut) {
-      return lutSelections()['all'] ? [] : uniqueCameras()
-    }
-    return uniqueCameras().filter(c => !lutSelections()[c.key])
-  })
+  const missingLutCameras = lutSelections_.missingLutCameras
 
   const canExport = createMemo(
     () => selectedCount() > 0 && !exporting() && missingLutCameras().length === 0
@@ -147,7 +123,7 @@ const AppContent: Component = () => {
 
   const fullClearAndGoBack = () => {
     resetVideoBatch()
-    setLutSelections({})
+    lutSelections_.setLutSelections({})
     setExporting(false)
     setExportProgress(null)
     setFileProgress({})
@@ -158,74 +134,6 @@ const AppContent: Component = () => {
     setShowExportComplete(false)
     fullClearAndGoBack()
   }
-
-  const handleLutSelectionChange = (cameraKey: string, option: DropdownOption | null) => {
-    setLutSelections(prev => ({ ...prev, [cameraKey]: option }))
-
-    if (cameraKey === 'all') {
-      setAppSetting('global_lut', option?.value ?? '').catch(err =>
-        console.error('Failed to save global_lut:', err)
-      )
-    }
-  }
-
-  // Prefill LUT dropdowns from saved camera→LUT mappings (per-camera mode only)
-  createEffect(() => {
-    if (!settings.perCameraLut) return
-
-    const cameras = uniqueCameras()
-
-    // Clear 'all' key so global persist effect doesn't save stale value when switching modes
-    setLutSelections(prev => {
-      if (!prev['all']) return prev
-      const next = { ...prev }
-      delete next['all']
-      return next
-    })
-
-    if (cameras.length === 0) return
-
-    // Build a lookup from stored path → LUT dropdown option
-    const lutByPath = new Map<string, DropdownOption>()
-    for (const lut of luts()) {
-      lutByPath.set(lut.storedPath, { label: lut.label, value: lut.storedPath })
-    }
-
-    getCameraLuts()
-      .then(saved => {
-        const selections: Record<string, DropdownOption | null> = {}
-        for (const camera of cameras) {
-          const savedPath = saved[camera.key]
-          if (savedPath) {
-            selections[camera.key] = lutByPath.get(savedPath) ?? null
-          }
-        }
-        setLutSelections(prev => ({ ...selections, ...prev }))
-      })
-      .catch(err => console.error('Failed to load camera LUTs:', err))
-  })
-
-  // Restore global LUT from SQLite (global mode only, after luts are loaded)
-  createEffect(() => {
-    if (settings.perCameraLut) return
-    if (lutSelections()['all']) return // already populated
-    if (luts().length === 0) return // luts not loaded yet
-
-    getAppSettings()
-      .then(saved => {
-        const savedPath = saved.global_lut
-        if (!savedPath) return
-
-        const lut = luts().find(l => l.storedPath === savedPath)
-        if (lut) {
-          setLutSelections(prev => ({
-            ...prev,
-            all: { label: lut.label, value: lut.storedPath }
-          }))
-        }
-      })
-      .catch(err => console.error('Failed to load global_lut:', err))
-  })
 
   const hasFilenameCollision = createMemo(() => {
     const pattern = outputSettings().pattern
@@ -249,11 +157,11 @@ const AppContent: Component = () => {
   const buildExportJob = (): ExportJob => {
     const cameraLuts: Record<string, string> = {}
     if (settings.perCameraLut) {
-      for (const [key, opt] of Object.entries(lutSelections())) {
+      for (const [key, opt] of Object.entries(lutSelections_.lutSelections())) {
         if (opt) cameraLuts[key] = opt.value
       }
     } else {
-      const allOpt = lutSelections()['all']
+      const allOpt = lutSelections_.lutSelections()['all']
       if (allOpt) {
         for (const v of selectedVideos()) {
           cameraLuts[v.cameraKey] = allOpt.value
@@ -368,12 +276,12 @@ const AppContent: Component = () => {
           <div class="flex-1 min-h-0 overflow-y-auto p-4">
             <LutAssignment
               cameras={uniqueCameras()}
-              luts={luts()}
-              onLutsAdded={fetchLuts}
+              luts={lutSelections_.luts()}
+              onLutsAdded={lutSelections_.fetchLuts}
               outputSettings={outputSettings()}
               onOutputChange={setOutputSettings}
-              selections={lutSelections()}
-              onSelectionChange={handleLutSelectionChange}
+              selections={lutSelections_.lutSelections()}
+              onSelectionChange={lutSelections_.handleLutSelectionChange}
               perCameraLut={settings.perCameraLut}
               hasFilenameCollision={hasFilenameCollision()}
             />
@@ -438,8 +346,8 @@ const AppContent: Component = () => {
         <SettingsModal
           open={showSettings()}
           onOpenChange={setShowSettings}
-          luts={luts()}
-          onLutsChanged={fetchLuts}
+          luts={lutSelections_.luts()}
+          onLutsChanged={lutSelections_.fetchLuts}
         />
         <FilenameCollisionModal
           open={collisionPaths() !== null}
