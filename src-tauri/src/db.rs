@@ -107,10 +107,10 @@ pub fn get_all_camera_luts(conn: &Connection) -> Result<Vec<(String, String)>> {
     Ok(results)
 }
 
-pub fn delete_camera_lut(conn: &Connection, camera_key: &str) -> Result<()> {
+pub fn delete_camera_luts_by_lut_path(conn: &Connection, lut_path: &str) -> Result<()> {
     conn.execute(
-        "DELETE FROM camera_luts WHERE camera_key = ?1",
-        params![camera_key],
+        "DELETE FROM camera_luts WHERE lut_path = ?1",
+        params![lut_path],
     )?;
     Ok(())
 }

@@ -99,6 +99,11 @@ pub fn delete_lut(id: i64, app: AppHandle) -> Result<(), String> {
         )
         .ok();
 
+    // Remove camera assignments referencing this LUT
+    if let Some(ref path) = stored_path {
+        db::delete_camera_luts_by_lut_path(&conn, path).map_err(|e| e.to_string())?;
+    }
+
     db::delete_lut(&conn, id).map_err(|e| e.to_string())?;
 
     // Remove the file from disk
