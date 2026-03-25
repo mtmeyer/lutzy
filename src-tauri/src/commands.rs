@@ -146,12 +146,38 @@ pub fn set_app_setting(key: String, value: String, app: AppHandle) -> Result<(),
 
 #[tauri::command]
 pub fn check_overwrite(job: ExportJob) -> Result<Vec<String>, String> {
-    let mut conflicts = Vec::new();
+    use std::collections::HashSet;
+
+    let source_paths: HashSet<String> = job.videos.iter().map(|v| v.path.to_lowercase()).collect();
+
+    // Map lowercased output path → (original output path, source videos)
+    let mut output_map: HashMap<String, (String, Vec<&str>)> = HashMap::new();
     for video in &job.videos {
         let output_path = export::build_output_path(&video.path, &job.output_settings);
-        if output_path == video.path {
-            conflicts.push(output_path);
+        let key = output_path.to_lowercase();
+        let entry = output_map
+            .entry(key)
+            .or_insert_with(|| (output_path, Vec::new()));
+        entry.1.push(video.path.as_str());
+    }
+
+    let mut conflicts: Vec<String> = Vec::new();
+
+    for (output_path, source_videos) in output_map.values() {
+        let mut is_conflict = false;
+
+        if source_paths.contains(&output_path.to_lowercase()) {
+            is_conflict = true;
+        }
+
+        if source_videos.len() > 1 {
+            is_conflict = true;
+        }
+
+        if is_conflict {
+            conflicts.push(output_path.clone());
         }
     }
+
     Ok(conflicts)
 }

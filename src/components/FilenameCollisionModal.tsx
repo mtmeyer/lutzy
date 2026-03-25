@@ -34,8 +34,9 @@ const FilenameCollisionModal: Component<FilenameCollisionModalProps> = props => 
         </Dialog.Title>
 
         <p class="mt-2 text-center text-sm text-text-2">
-          The following output files would overwrite their source files, which is not
-          supported. Please update the Filename setting to avoid collisions.
+          Some output files would overwrite existing files or resolve to the same
+          filename. Please update the Filename or Output format settings to avoid
+          collisions.
         </p>
 
         <div class="mt-3 max-h-40 w-full overflow-y-auto rounded-md border border-border bg-surface-2 px-3 py-2">
