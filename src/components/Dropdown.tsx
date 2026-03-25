@@ -28,10 +28,10 @@ const Dropdown: Component<DropdownProps> = props => {
       itemComponent={itemProps => (
         <Select.Item
           item={itemProps.item}
-          class="flex cursor-pointer items-center justify-between rounded-sm px-2 py-1.5 text-sm text-gray-800 outline-none transition-colors hover:bg-gray-100 data-[highlighted]:bg-blue-50 data-[highlighted]:text-blue-700"
+          class="flex cursor-pointer items-center justify-between rounded-sm px-2 py-1.5 text-sm text-body outline-none transition-colors hover:bg-surface-3 data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent"
         >
           <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-          <Select.ItemIndicator class="text-blue-600">
+          <Select.ItemIndicator class="text-accent">
             <svg
               class="size-3.5"
               viewBox="0 0 12 12"
@@ -48,7 +48,7 @@ const Dropdown: Component<DropdownProps> = props => {
       )}
     >
       <Select.Trigger
-        class="flex w-full items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-800 transition-colors hover:bg-gray-100 focus:border-blue-400 focus:outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
+        class="flex w-full items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-1.5 text-sm text-body transition-colors hover:bg-surface-3 focus:border-accent focus:outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
         aria-label="Dropdown"
       >
         <Select.Value<DropdownOption>>
@@ -57,13 +57,13 @@ const Dropdown: Component<DropdownProps> = props => {
             return selected ? (
               selected.label
             ) : (
-              <span class="text-gray-400">{props.placeholder ?? 'Select…'}</span>
+              <span class="text-text-3">{props.placeholder ?? 'Select…'}</span>
             )
           }}
         </Select.Value>
         <Select.Icon>
           <svg
-            class="ml-2 size-3.5 shrink-0 text-gray-400 ui-expanded:rotate-180"
+            class="ml-2 size-3.5 shrink-0 text-text-3 ui-expanded:rotate-180"
             viewBox="0 0 12 12"
             fill="none"
             stroke="currentColor"
@@ -77,7 +77,7 @@ const Dropdown: Component<DropdownProps> = props => {
       </Select.Trigger>
 
       <Select.Portal>
-        <Select.Content class="z-50 rounded-md border border-gray-200 bg-white shadow-lg">
+        <Select.Content class="z-50 rounded-md border border-border bg-surface-3 shadow-lg">
           <Select.Listbox class="max-h-60 overflow-y-auto p-1" />
         </Select.Content>
       </Select.Portal>

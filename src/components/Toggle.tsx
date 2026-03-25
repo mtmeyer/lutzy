@@ -20,15 +20,15 @@ const Toggle: Component<ToggleProps> = props => {
       >
         {state => (
           <div
-            class="h-5 w-9 rounded-full bg-gray-200 transition-colors after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all"
+            class="h-5 w-9 rounded-full bg-border transition-colors after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all"
             classList={{
-              'bg-blue-600': state.pressed(),
+              'bg-accent': state.pressed(),
               'after:translate-x-4': state.pressed()
             }}
           />
         )}
       </ToggleButton>
-      {props.label && <span class="text-sm text-gray-800">{props.label}</span>}
+      {props.label && <span class="text-sm text-body">{props.label}</span>}
     </label>
   )
 }

@@ -122,3 +122,18 @@ pub fn get_camera_luts(app: AppHandle) -> Result<HashMap<String, String>, String
     let rows = db::get_all_camera_luts(&conn).map_err(|e| e.to_string())?;
     Ok(rows.into_iter().collect())
 }
+
+#[tauri::command]
+pub fn get_app_settings(app: AppHandle) -> Result<HashMap<String, String>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let rows = db::get_all_settings(&conn).map_err(|e| e.to_string())?;
+    Ok(rows.into_iter().collect())
+}
+
+#[tauri::command]
+pub fn set_app_setting(key: String, value: String, app: AppHandle) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    db::set_setting(&conn, &key, &value).map_err(|e| e.to_string())
+}

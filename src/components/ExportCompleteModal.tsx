@@ -28,7 +28,7 @@ const ExportCompleteModal: Component<ExportCompleteModalProps> = props => {
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-50 bg-black/40" />
         <Dialog.Content class="fixed inset-0 z-50 flex items-center justify-center">
-          <div class="mx-4 w-full max-w-sm rounded-xl bg-white shadow-xl">
+          <div class="mx-4 w-full max-w-sm rounded-xl bg-surface shadow-xl">
             <div class="flex flex-col items-center px-6 pt-8 pb-6">
               {/* Icon */}
               <Show
@@ -69,12 +69,12 @@ const ExportCompleteModal: Component<ExportCompleteModalProps> = props => {
               </Show>
 
               {/* Heading */}
-              <Dialog.Title class="mt-4 text-lg font-semibold text-gray-900">
+              <Dialog.Title class="mt-4 text-lg font-semibold text-heading">
                 {allSucceeded() ? 'Export Complete' : 'Export Finished'}
               </Dialog.Title>
 
               {/* Summary */}
-              <p class="mt-2 text-center text-sm text-gray-500">
+              <p class="mt-2 text-center text-sm text-text-2">
                 <Show when={errorCount() === 0}>
                   {successCount()} of {props.totalFiles} clip
                   {props.totalFiles !== 1 ? 's' : ''} exported successfully.
@@ -91,11 +91,11 @@ const ExportCompleteModal: Component<ExportCompleteModalProps> = props => {
               <div class="mt-6 flex w-full flex-col gap-2">
                 <button
                   onClick={props.onNewBatch}
-                  class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                  class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors"
                 >
                   Start New Batch
                 </button>
-                <Dialog.CloseButton class="w-full rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                <Dialog.CloseButton class="w-full rounded-lg px-4 py-2 text-sm font-medium text-text-2 hover:text-body transition-colors">
                   Close
                 </Dialog.CloseButton>
               </div>

@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import { createMemo, createSignal, For, Show, type Component } from 'solid-js'
 import type { LutFile, OutputSettings } from '../types'
-import { getExtForCodec, folderLabel } from '../utils'
+import { folderLabel, getExtForCodec } from '../utils'
 import Dropdown, { type DropdownOption } from './Dropdown'
 import InputField from './InputField'
 import Toggle from './Toggle'
@@ -48,7 +48,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
   return (
     <div class="flex flex-col gap-6">
       <Show when={props.cameras.length === 0}>
-        <div class="flex items-center justify-center py-12 text-gray-400 text-sm">
+        <div class="flex items-center justify-center py-12 text-text-3 text-sm">
           No files selected
         </div>
       </Show>
@@ -56,13 +56,13 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
       <Show when={props.cameras.length > 0}>
         <div>
           <div class="mb-3 flex items-center justify-between">
-            <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <div class="text-xs font-semibold uppercase tracking-wider text-text-2">
               LUT Assignment
             </div>
             <button
               onClick={() => void handleAddLuts()}
               disabled={adding()}
-              class="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800 disabled:opacity-50"
+              class="rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-body transition-colors hover:bg-surface-2 hover:text-heading disabled:opacity-50"
             >
               {adding() ? 'Adding…' : 'Add LUT'}
             </button>
@@ -70,8 +70,8 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
           <div class="flex flex-col gap-3">
             <For each={props.cameras}>
               {camera => (
-                <div class="rounded-lg border border-gray-200 bg-white">
-                  <div class="border-b border-gray-100 px-3 py-2 text-sm font-medium text-gray-800">
+                <div class="rounded-lg border border-border bg-surface">
+                  <div class="border-b border-border px-3 py-2 text-sm font-medium text-heading">
                     {camera.display}
                   </div>
                   <div class="p-3">
@@ -84,7 +84,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                         disabled={dropdownOptions().length === 0}
                       />
                     </div>
-                    <div class="mt-2 text-xs text-gray-400">last used</div>
+                    <div class="mt-2 text-xs text-text-3">last used</div>
                   </div>
                 </div>
               )}
@@ -95,13 +95,13 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
 
       <Show when={props.cameras.length > 0}>
         <div>
-          <div class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+          <div class="mb-3 text-xs font-semibold uppercase tracking-wider text-text-2">
             Output
           </div>
-          <div class="rounded-lg border border-gray-200 bg-white">
-            <div class="divide-y divide-gray-100">
+          <div class="rounded-lg border border-border bg-surface">
+            <div class="divide-y divide-border">
               <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-gray-500">Destination</span>
+                <span class="text-sm text-text-2">Destination</span>
                 <div class="w-40">
                   <Dropdown
                     options={[
@@ -118,7 +118,8 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                       props.onOutputChange({
                         ...props.outputSettings,
                         destination: dest as 'same' | 'custom',
-                        customPath: dest === 'custom' ? props.outputSettings.customPath : ''
+                        customPath:
+                          dest === 'custom' ? props.outputSettings.customPath : ''
                       })
                     }}
                   />
@@ -126,10 +127,10 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
               </div>
               <Show when={props.outputSettings.destination === 'custom'}>
                 <div class="flex items-center justify-between px-3 py-2.5">
-                  <span class="text-sm text-gray-500">Folder</span>
+                  <span class="text-sm text-text-2">Folder</span>
                   <div class="flex items-center gap-2">
                     <span
-                      class="max-w-[140px] truncate text-sm text-gray-800"
+                      class="max-w-[140px] truncate text-sm text-heading"
                       title={props.outputSettings.customPath || 'No folder selected'}
                     >
                       {props.outputSettings.customPath
@@ -151,7 +152,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                           }
                         })
                       }}
-                      class="shrink-0 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+                      class="shrink-0 rounded-md border border-border bg-surface px-2 py-1 text-xs font-medium text-body transition-colors hover:bg-surface-2 hover:text-heading"
                     >
                       Browse
                     </button>
@@ -159,7 +160,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                 </div>
               </Show>
               <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-gray-500">Suffix</span>
+                <span class="text-sm text-text-2">Suffix</span>
                 <InputField
                   value={props.outputSettings.suffix}
                   onChange={value =>
@@ -172,7 +173,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                 />
               </div>
               <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-gray-500">Codec</span>
+                <span class="text-sm text-text-2">Codec</span>
                 <div class="w-40">
                   <Dropdown
                     options={[
@@ -201,7 +202,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                 </div>
               </div>
               <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-gray-500">Format</span>
+                <span class="text-sm text-text-2">Format</span>
                 <div class="w-40">
                   <Dropdown
                     options={getExtForCodec(props.outputSettings.videoCodec).options}
@@ -223,7 +224,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                 </div>
               </div>
               <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-gray-500">Overwrite</span>
+                <span class="text-sm text-text-2">Overwrite</span>
                 <Toggle
                   checked={props.outputSettings.overwrite}
                   onChange={pressed =>

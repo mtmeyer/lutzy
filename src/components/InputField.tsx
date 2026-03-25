@@ -23,17 +23,17 @@ const InputField: Component<InputFieldProps> = props => {
       class={`flex flex-col gap-1 ${props.class ?? ''}`}
     >
       {props.label && (
-        <TextField.Label class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <TextField.Label class="text-xs font-semibold uppercase tracking-wider text-text-2">
           {props.label}
         </TextField.Label>
       )}
       <TextField.Input
         type={props.type ?? 'text'}
         placeholder={props.placeholder}
-        class="w-full rounded border border-gray-200 bg-gray-50 px-2 py-1 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
+        class="w-full rounded border border-border bg-surface-2 px-2 py-1 text-sm text-body placeholder:text-text-3 focus:border-accent focus:outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
       />
       {props.description && (
-        <TextField.Description class="text-xs text-gray-400">
+        <TextField.Description class="text-xs text-text-3">
           {props.description}
         </TextField.Description>
       )}

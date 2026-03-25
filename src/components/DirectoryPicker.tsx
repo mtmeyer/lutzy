@@ -25,14 +25,14 @@ const DirectoryPicker: Component<DirectoryPickerProps> = props => {
     <div class="flex items-center gap-2">
       <button
         onClick={props.onBack}
-        class="shrink-0 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+        class="shrink-0 rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-text-2 hover:bg-surface-2 hover:text-body transition-colors"
         title="Back to folder selection"
       >
         ←
       </button>
       <button
         onClick={pickDirectory}
-        class="flex-1 min-w-0 truncate rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-600 text-left hover:border-gray-300 transition-colors cursor-pointer"
+        class="flex-1 min-w-0 truncate rounded-md border border-border bg-surface-2 px-3 py-1.5 text-sm text-body text-left hover:border-border-strong transition-colors cursor-pointer"
         title={props.directory || 'No directory selected'}
       >
         {props.directory ? folderName(props.directory) : 'No directory selected'}
