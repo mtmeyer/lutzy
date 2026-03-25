@@ -102,6 +102,13 @@ pub fn delete_lut(id: i64, app: AppHandle) -> Result<(), String> {
     // Remove camera assignments referencing this LUT
     if let Some(ref path) = stored_path {
         db::delete_camera_luts_by_lut_path(&conn, path).map_err(|e| e.to_string())?;
+
+        // Clear global LUT setting if it matches the deleted LUT
+        if let Ok(Some(global_lut)) = db::get_setting(&conn, db::GLOBAL_LUT_KEY) {
+            if global_lut == *path {
+                let _ = db::set_setting(&conn, db::GLOBAL_LUT_KEY, "");
+            }
+        }
     }
 
     db::delete_lut(&conn, id).map_err(|e| e.to_string())?;

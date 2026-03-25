@@ -8,7 +8,7 @@ import {
   type JSX
 } from 'solid-js'
 import { createStore, type SetStoreFunction } from 'solid-js/store'
-import { defaultSettings, parseSettings } from '../utils/theme'
+import { defaultSettings, parseSettings } from '../utils'
 
 export interface Settings {
   theme: 'system' | 'light' | 'dark'

@@ -7,6 +7,7 @@ use tauri::{AppHandle, Manager};
 
 const DB_FILENAME: &str = "app.db";
 pub const LUTS_DIR: &str = "luts";
+pub const GLOBAL_LUT_KEY: &str = "global_lut";
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]

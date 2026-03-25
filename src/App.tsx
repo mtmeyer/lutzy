@@ -199,6 +199,12 @@ const AppContent: Component = () => {
 
   const handleLutSelectionChange = (cameraKey: string, option: DropdownOption | null) => {
     setLutSelections(prev => ({ ...prev, [cameraKey]: option }))
+
+    if (cameraKey === 'all') {
+      invoke('set_app_setting', { key: 'global_lut', value: option?.value ?? '' }).catch(err =>
+        console.error('Failed to save global_lut:', err)
+      )
+    }
   }
 
   // Prefill LUT dropdowns from saved camera→LUT mappings (per-camera mode only)
@@ -206,6 +212,15 @@ const AppContent: Component = () => {
     if (!settings.perCameraLut) return
 
     const cameras = uniqueCameras()
+
+    // Clear 'all' key so global persist effect doesn't save stale value when switching modes
+    setLutSelections(prev => {
+      if (!prev['all']) return prev
+      const next = { ...prev }
+      delete next['all']
+      return next
+    })
+
     if (cameras.length === 0) return
 
     // Build a lookup from stored path → LUT dropdown option
@@ -226,6 +241,28 @@ const AppContent: Component = () => {
         setLutSelections(prev => ({ ...selections, ...prev }))
       })
       .catch(err => console.error('Failed to load camera LUTs:', err))
+  })
+
+  // Restore global LUT from SQLite (global mode only, after luts are loaded)
+  createEffect(() => {
+    if (settings.perCameraLut) return
+    if (lutSelections()['all']) return // already populated
+    if (luts().length === 0) return // luts not loaded yet
+
+    invoke<Record<string, string>>('get_app_settings')
+      .then(saved => {
+        const savedPath = saved.global_lut
+        if (!savedPath) return
+
+        const lut = luts().find(l => l.storedPath === savedPath)
+        if (lut) {
+          setLutSelections(prev => ({
+            ...prev,
+            all: { label: lut.label, value: lut.storedPath }
+          }))
+        }
+      })
+      .catch(err => console.error('Failed to load global_lut:', err))
   })
 
   const hasFilenameCollision = createMemo(() => {

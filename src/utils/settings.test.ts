@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveDarkMode, parseSettings, defaultSettings } from './theme'
+import { resolveDarkMode, parseSettings, defaultSettings } from './settings'
 
 describe('resolveDarkMode', () => {
   it('returns true when theme is dark', () => {
