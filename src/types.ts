@@ -15,8 +15,7 @@ export interface VideoFile {
 export interface OutputSettings {
   destination: 'same' | 'custom'
   customPath: string
-  suffix: string
-  overwrite: boolean
+  pattern: string
   videoCodec: string
   outputExtension: string
 }
@@ -40,8 +39,7 @@ export interface ExportVideo {
 export interface ExportOutputSettings {
   destination: 'same' | 'custom'
   customPath: string
-  suffix: string
-  overwrite: boolean
+  pattern: string
   videoCodec: string
   outputExtension: string
 }

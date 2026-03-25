@@ -1,4 +1,5 @@
 use crate::db::{self, DbState, LutEntry, LUTS_DIR};
+use crate::export::{self, ExportJob};
 use crate::lut;
 use std::collections::HashMap;
 use std::fs;
@@ -136,4 +137,16 @@ pub fn set_app_setting(key: String, value: String, app: AppHandle) -> Result<(),
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     db::set_setting(&conn, &key, &value).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn check_overwrite(job: ExportJob) -> Result<Vec<String>, String> {
+    let mut conflicts = Vec::new();
+    for video in &job.videos {
+        let output_path = export::build_output_path(&video.path, &job.output_settings);
+        if output_path == video.path {
+            conflicts.push(output_path);
+        }
+    }
+    Ok(conflicts)
 }

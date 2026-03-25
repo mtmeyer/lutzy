@@ -5,7 +5,6 @@ import type { LutFile, OutputSettings } from '../types'
 import { folderLabel, getExtForCodec } from '../utils'
 import Dropdown, { type DropdownOption } from './Dropdown'
 import InputField from './InputField'
-import Toggle from './Toggle'
 
 interface LutAssignmentProps {
   cameras: { key: string; display: string }[]
@@ -16,6 +15,7 @@ interface LutAssignmentProps {
   selections: Record<string, DropdownOption | null>
   onSelectionChange: (cameraKey: string, option: DropdownOption | null) => void
   perCameraLut: boolean
+  hasFilenameCollision: boolean
 }
 
 const LutAssignment: Component<LutAssignmentProps> = props => {
@@ -179,16 +179,21 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                 </div>
               </Show>
               <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-text-2">Suffix</span>
+                <span class="text-sm text-text-2">Filename</span>
                 <InputField
-                  value={props.outputSettings.suffix}
+                  value={props.outputSettings.pattern}
                   onChange={value =>
                     props.onOutputChange({
                       ...props.outputSettings,
-                      suffix: value
+                      pattern: value
                     })
                   }
-                  class="w-32 text-right"
+                  class="w-40 text-right"
+                  error={
+                    props.hasFilenameCollision
+                      ? 'Will overwrite source files'
+                      : undefined
+                  }
                 />
               </div>
               <div class="flex items-center justify-between px-3 py-2.5">
@@ -241,18 +246,6 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                     disabled={props.outputSettings.videoCodec === 'same'}
                   />
                 </div>
-              </div>
-              <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-text-2">Overwrite</span>
-                <Toggle
-                  checked={props.outputSettings.overwrite}
-                  onChange={pressed =>
-                    props.onOutputChange({
-                      ...props.outputSettings,
-                      overwrite: pressed
-                    })
-                  }
-                />
               </div>
             </div>
           </div>

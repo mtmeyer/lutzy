@@ -22,8 +22,7 @@ pub struct ExportVideo {
 pub struct ExportOutputSettings {
     pub destination: String,
     pub custom_path: String,
-    pub suffix: String,
-    pub overwrite: bool,
+    pub pattern: String,
     pub video_codec: String,
     pub output_extension: String,
 }
@@ -98,7 +97,8 @@ pub(crate) fn build_output_path(source_path: &str, settings: &ExportOutputSettin
         settings.output_extension.clone()
     };
 
-    let output_filename = format!("{}{}.{}", stem, settings.suffix, ext);
+    let resolved = settings.pattern.replace("{name}", stem);
+    let output_filename = format!("{}.{}", resolved, ext);
 
     if settings.destination == "custom" && !settings.custom_path.is_empty() {
         Path::new(&settings.custom_path)
@@ -148,8 +148,8 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
             let lut_path = job.camera_luts.get(&video.camera_key).unwrap();
             let output_path = build_output_path(&video.path, &job.output_settings);
 
-            // Check if output exists and overwrite is not enabled
-            if !job.output_settings.overwrite && Path::new(&output_path).exists() {
+            // Check if output file already exists
+            if Path::new(&output_path).exists() {
                 let _ = app_clone.emit(
                     "export-progress",
                     &ExportProgress {
@@ -193,10 +193,6 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
             }
 
             command.args(["-c:a", "copy"]).args(["-dn"]).args(["-sn"]);
-
-            if job.output_settings.overwrite {
-                command.arg("-y");
-            }
 
             command.arg(&output_path);
 
@@ -425,7 +421,7 @@ mod tests {
     // --- build_output_path ---
 
     fn settings(
-        suffix: &str,
+        pattern: &str,
         destination: &str,
         custom_path: &str,
         ext: &str,
@@ -433,8 +429,7 @@ mod tests {
         ExportOutputSettings {
             destination: destination.to_string(),
             custom_path: custom_path.to_string(),
-            suffix: suffix.to_string(),
-            overwrite: false,
+            pattern: pattern.to_string(),
             video_codec: "same".to_string(),
             output_extension: ext.to_string(),
         }
@@ -442,7 +437,7 @@ mod tests {
 
     #[test]
     fn output_same_dest_same_ext() {
-        let s = settings("_graded", "same", "", "same");
+        let s = settings("{name}_graded", "same", "", "same");
         let result = build_output_path("/videos/clip.mp4", &s);
         assert!(result.ends_with("clip_graded.mp4"));
         assert!(result.starts_with("/videos"));
@@ -450,7 +445,7 @@ mod tests {
 
     #[test]
     fn output_custom_dest() {
-        let s = settings("_graded", "custom", "/output", "same");
+        let s = settings("{name}_graded", "custom", "/output", "same");
         let result = build_output_path("/videos/clip.mp4", &s);
         assert!(result.starts_with("/output"));
         assert!(result.contains("clip_graded.mp4"));
@@ -458,22 +453,29 @@ mod tests {
 
     #[test]
     fn output_different_ext() {
-        let s = settings("_graded", "same", "", "mov");
+        let s = settings("{name}_graded", "same", "", "mov");
         let result = build_output_path("/videos/clip.mp4", &s);
         assert!(result.ends_with("clip_graded.mov"));
     }
 
     #[test]
-    fn output_no_suffix() {
-        let s = settings("", "same", "", "same");
+    fn output_no_pattern() {
+        let s = settings("{name}", "same", "", "same");
         let result = build_output_path("/videos/clip.mp4", &s);
         assert!(result.ends_with("clip.mp4"));
     }
 
     #[test]
     fn output_custom_empty_path_falls_back_to_same() {
-        let s = settings("_graded", "custom", "", "same");
+        let s = settings("{name}_graded", "custom", "", "same");
         let result = build_output_path("/videos/clip.mp4", &s);
         assert!(result.starts_with("/videos"));
+    }
+
+    #[test]
+    fn output_pattern_prefix() {
+        let s = settings("graded_{name}", "same", "", "mp4");
+        let result = build_output_path("/videos/clip.mov", &s);
+        assert!(result.ends_with("graded_clip.mp4"));
     }
 }

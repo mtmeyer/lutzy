@@ -35,6 +35,7 @@ pub fn run() {
             commands::rename_lut,
             commands::get_app_settings,
             commands::set_app_setting,
+            commands::check_overwrite,
             export::start_export
         ])
         .run(tauri::generate_context!())

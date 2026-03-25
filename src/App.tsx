@@ -1,6 +1,7 @@
 import DirectoryPicker from '@components/DirectoryPicker'
 import type { DropdownOption } from '@components/Dropdown'
 import ExportCompleteModal from '@components/ExportCompleteModal'
+import FilenameCollisionModal from '@components/FilenameCollisionModal'
 import LutAssignment from '@components/LutAssignment'
 import SettingsModal from '@components/SettingsModal'
 import VideoList from '@components/VideoList'
@@ -68,8 +69,7 @@ const AppContent: Component = () => {
   const [outputSettings, setOutputSettings] = createSignal<OutputSettings>({
     destination: 'same',
     customPath: '',
-    suffix: '_graded',
-    overwrite: false,
+    pattern: '{name}_graded',
     videoCodec: 'same',
     outputExtension: 'same'
   })
@@ -84,6 +84,7 @@ const AppContent: Component = () => {
   >({})
   const [showExportComplete, setShowExportComplete] = createSignal(false)
   const [showSettings, setShowSettings] = createSignal(false)
+  const [collisionPaths, setCollisionPaths] = createSignal<string[] | null>(null)
 
   const fetchLuts = () => {
     invoke<LutFile[]>('get_luts')
@@ -227,9 +228,26 @@ const AppContent: Component = () => {
       .catch(err => console.error('Failed to load camera LUTs:', err))
   })
 
-  const handleExport = async () => {
-    if (!canExport()) return
+  const hasFilenameCollision = createMemo(() => {
+    const pattern = outputSettings().pattern
+    const ext = outputSettings().outputExtension
+    if (!pattern.includes('{name}')) return false
+    for (const v of selectedVideos()) {
+      const parts = v.filename.split('.')
+      parts.pop()
+      const stem = parts.join('.')
+      if (!stem) continue
+      const resolved = pattern.replace('{name}', stem)
+      const srcExt = v.filename.split('.').pop()?.toLowerCase() ?? ''
+      const outExt = ext === 'same' ? srcExt : ext.toLowerCase()
+      if (resolved === stem && outExt === srcExt) {
+        return true
+      }
+    }
+    return false
+  })
 
+  const buildExportJob = (): ExportJob => {
     const cameraLuts: Record<string, string> = {}
     if (settings.perCameraLut) {
       for (const [key, opt] of Object.entries(lutSelections())) {
@@ -244,7 +262,7 @@ const AppContent: Component = () => {
       }
     }
 
-    const job: ExportJob = {
+    return {
       videos: selectedVideos().map(v => ({
         path: v.path,
         cameraKey: v.cameraKey,
@@ -256,13 +274,15 @@ const AppContent: Component = () => {
       outputSettings: {
         destination: outputSettings().destination,
         customPath: outputSettings().customPath,
-        suffix: outputSettings().suffix,
-        overwrite: outputSettings().overwrite,
+        pattern: outputSettings().pattern,
         videoCodec: outputSettings().videoCodec,
         outputExtension: outputSettings().outputExtension
       }
     }
+  }
 
+  const startExport = async () => {
+    const job = buildExportJob()
     setExporting(true)
     setExportProgress(null)
     setFileProgress({})
@@ -272,6 +292,23 @@ const AppContent: Component = () => {
     } catch (err) {
       console.error('Export failed:', err)
       setExporting(false)
+    }
+  }
+
+  const handleExport = async () => {
+    if (!canExport()) return
+
+    const job = buildExportJob()
+
+    try {
+      const conflicts = await invoke<string[]>('check_overwrite', { job })
+      if (conflicts.length > 0) {
+        setCollisionPaths(conflicts)
+        return
+      }
+      await startExport()
+    } catch (err) {
+      console.error('Export check failed:', err)
     }
   }
 
@@ -339,6 +376,7 @@ const AppContent: Component = () => {
               selections={lutSelections()}
               onSelectionChange={handleLutSelectionChange}
               perCameraLut={settings.perCameraLut}
+              hasFilenameCollision={hasFilenameCollision()}
             />
           </div>
         </div>
@@ -403,6 +441,14 @@ const AppContent: Component = () => {
           onOpenChange={setShowSettings}
           luts={luts()}
           onLutsChanged={fetchLuts}
+        />
+        <FilenameCollisionModal
+          open={collisionPaths() !== null}
+          onOpenChange={open => {
+            if (!open) setCollisionPaths(null)
+          }}
+          paths={collisionPaths() ?? []}
+          onDismiss={() => setCollisionPaths(null)}
         />
       </div>
     </Show>
