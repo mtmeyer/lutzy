@@ -6,8 +6,15 @@ import LutAssignment from '@components/LutAssignment'
 import SettingsModal from '@components/SettingsModal'
 import VideoList from '@components/VideoList'
 import WelcomeScreen from '@components/WelcomeScreen'
-import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
+import {
+  getLuts,
+  getCameraLuts,
+  getAppSettings,
+  setAppSetting,
+  scanDirectory,
+  checkOverwrite
+} from './services/tauriApi'
+import { subscribeToExportProgress } from './services/events'
 import { AiOutlineSetting } from 'solid-icons/ai'
 import {
   createEffect,
@@ -87,7 +94,7 @@ const AppContent: Component = () => {
   const [collisionPaths, setCollisionPaths] = createSignal<string[] | null>(null)
 
   const fetchLuts = () => {
-    invoke<LutFile[]>('get_luts')
+    getLuts()
       .then(result => setLuts(result))
       .catch(err => console.error('Failed to fetch LUTs:', err))
   }
@@ -96,8 +103,7 @@ const AppContent: Component = () => {
 
   // Listen for export progress events
   onMount(() => {
-    void listen<ExportProgress>('export-progress', event => {
-      const p = event.payload
+    void subscribeToExportProgress(p => {
       setExportProgress(p)
 
       // Map fileIndex to video path using the selected videos order
@@ -162,7 +168,7 @@ const AppContent: Component = () => {
       return
     }
     setLoading(true)
-    invoke<VideoFile[]>('scan_directory', { dirPath: path })
+    scanDirectory(path)
       .then(result => setVideos(result.map(v => ({ ...v, selected: true }))))
       .catch(err => {
         console.error('Scan failed:', err)
@@ -201,7 +207,7 @@ const AppContent: Component = () => {
     setLutSelections(prev => ({ ...prev, [cameraKey]: option }))
 
     if (cameraKey === 'all') {
-      invoke('set_app_setting', { key: 'global_lut', value: option?.value ?? '' }).catch(err =>
+      setAppSetting('global_lut', option?.value ?? '').catch(err =>
         console.error('Failed to save global_lut:', err)
       )
     }
@@ -229,7 +235,7 @@ const AppContent: Component = () => {
       lutByPath.set(lut.storedPath, { label: lut.label, value: lut.storedPath })
     }
 
-    invoke<Record<string, string>>('get_camera_luts')
+    getCameraLuts()
       .then(saved => {
         const selections: Record<string, DropdownOption | null> = {}
         for (const camera of cameras) {
@@ -249,7 +255,7 @@ const AppContent: Component = () => {
     if (lutSelections()['all']) return // already populated
     if (luts().length === 0) return // luts not loaded yet
 
-    invoke<Record<string, string>>('get_app_settings')
+    getAppSettings()
       .then(saved => {
         const savedPath = saved.global_lut
         if (!savedPath) return
@@ -325,7 +331,7 @@ const AppContent: Component = () => {
     setFileProgress({})
 
     try {
-      await invoke('start_export', { job })
+      await startExport(job)
     } catch (err) {
       console.error('Export failed:', err)
       setExporting(false)
@@ -338,7 +344,7 @@ const AppContent: Component = () => {
     const job = buildExportJob()
 
     try {
-      const conflicts = await invoke<string[]>('check_overwrite', { job })
+      const conflicts = await checkOverwrite(job)
       if (conflicts.length > 0) {
         setCollisionPaths(conflicts)
         return

@@ -1,8 +1,8 @@
-import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import { createMemo, createSignal, For, Show, type Component } from 'solid-js'
 import type { LutFile, OutputSettings } from '../types'
 import { folderLabel, getExtForCodec } from '../utils'
+import { addLuts } from '../services/tauriApi'
 import Dropdown, { type DropdownOption } from './Dropdown'
 import InputField from './InputField'
 
@@ -37,7 +37,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
     setAdding(true)
 
     try {
-      await invoke<LutFile[]>('add_luts', { filePaths: paths })
+      await addLuts(paths)
       props.onLutsAdded()
     } catch (err) {
       console.error('Failed to add LUTs:', err)

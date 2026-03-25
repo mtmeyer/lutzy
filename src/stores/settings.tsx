@@ -1,4 +1,3 @@
-import { invoke } from '@tauri-apps/api/core'
 import {
   createContext,
   createEffect,
@@ -9,6 +8,7 @@ import {
 } from 'solid-js'
 import { createStore, type SetStoreFunction } from 'solid-js/store'
 import { defaultSettings, parseSettings } from '../utils'
+import { getAppSettings, setAppSetting } from '../services/tauriApi'
 
 export interface Settings {
   theme: 'system' | 'light' | 'dark'
@@ -27,7 +27,7 @@ export const SettingsProvider: Component<{ children: JSX.Element }> = props => {
 
   // Hydrate from SQLite on mount
   onMount(() => {
-    invoke<Record<string, string>>('get_app_settings')
+    getAppSettings()
       .then(saved => {
         setSettings(parseSettings(saved))
       })
@@ -38,7 +38,7 @@ export const SettingsProvider: Component<{ children: JSX.Element }> = props => {
   createEffect(() => {
     const theme = settings.theme
     localStorage.setItem('theme', theme)
-    invoke('set_app_setting', { key: 'theme', value: theme }).catch(err =>
+    setAppSetting('theme', theme).catch(err =>
       console.error('Failed to save theme:', err)
     )
   })
@@ -46,7 +46,7 @@ export const SettingsProvider: Component<{ children: JSX.Element }> = props => {
   // Persist perCameraLut to SQLite on change
   createEffect(() => {
     const value = String(settings.perCameraLut)
-    invoke('set_app_setting', { key: 'perCameraLut', value }).catch(err =>
+    setAppSetting('perCameraLut', value).catch(err =>
       console.error('Failed to save perCameraLut:', err)
     )
   })

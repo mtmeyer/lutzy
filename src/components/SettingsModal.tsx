@@ -1,9 +1,9 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import { createSignal, For, Show, type Component } from 'solid-js'
 import { useSettings } from '../stores/settings'
 import type { LutFile } from '../types'
+import { addLuts, deleteLut, renameLut } from '../services/tauriApi'
 import ConfirmModal from './ConfirmModal'
 import Dropdown, { type DropdownOption } from './Dropdown'
 import InputField from './InputField'
@@ -50,7 +50,7 @@ const SettingsModal: Component<SettingsModalProps> = props => {
     if (id === null) return
     setSaving(true)
     try {
-      await invoke('rename_lut', { id, label: editLabel() })
+      await renameLut(id, editLabel())
       props.onLutsChanged()
       cancelEdit()
     } catch (err) {
@@ -66,7 +66,7 @@ const SettingsModal: Component<SettingsModalProps> = props => {
     setConfirmDeleteId(null)
     setDeletingId(lut.id)
     try {
-      await invoke('delete_lut', { id: lut.id })
+      await deleteLut(lut.id)
       props.onLutsChanged()
     } catch (err) {
       console.error('Failed to delete LUT:', err)
@@ -87,7 +87,7 @@ const SettingsModal: Component<SettingsModalProps> = props => {
     setAdding(true)
 
     try {
-      await invoke('add_luts', { filePaths: paths })
+      await addLuts(paths)
       props.onLutsChanged()
     } catch (err) {
       console.error('Failed to add LUTs:', err)
