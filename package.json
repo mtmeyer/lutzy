@@ -20,6 +20,7 @@
     "prettier:fix": "prettier src -w",
     "eslint": "eslint src",
     "eslint:fix": "eslint src --fix",
+    "typecheck": "tsc --noEmit",
     "tauri": "tauri",
     "test": "vitest",
     "test:run": "vitest run"

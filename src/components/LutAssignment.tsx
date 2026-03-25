@@ -1,6 +1,6 @@
 import { open } from '@tauri-apps/plugin-dialog'
 import { createMemo, createSignal, For, Show, type Component } from 'solid-js'
-import type { LutFile, OutputSettings } from '../types'
+import type { LutFile, OutputSettings, VideoCodec, OutputExtension } from '../types'
 import { folderLabel, getExtForCodec } from '../utils'
 import { addLuts } from '../services/tauriApi'
 import Dropdown, { type DropdownOption } from './Dropdown'
@@ -213,7 +213,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                         : { label: 'Same as source', value: 'same' }
                     })()}
                     onChange={option => {
-                      const codec = option?.value ?? 'same'
+                      const codec = (option?.value as VideoCodec) ?? 'same'
                       const extInfo = getExtForCodec(codec)
                       props.onOutputChange({
                         ...props.outputSettings,
@@ -240,7 +240,7 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
                     onChange={option =>
                       props.onOutputChange({
                         ...props.outputSettings,
-                        outputExtension: option?.value ?? 'same'
+                        outputExtension: (option?.value as OutputExtension) ?? 'same'
                       })
                     }
                     disabled={props.outputSettings.videoCodec === 'same'}

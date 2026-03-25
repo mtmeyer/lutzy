@@ -1,3 +1,7 @@
+export type VideoCodec = 'h264' | 'h265' | 'prores' | 'same'
+export type OutputExtension = 'mp4' | 'mkv' | 'mov' | 'same'
+export type ExportStatus = 'processing' | 'done' | 'error' | 'complete'
+
 export interface VideoFile {
   filename: string
   path: string
@@ -7,7 +11,7 @@ export interface VideoFile {
   duration: number
   cameraKey: string
   cameraDisplay: string
-  videoCodec: string
+  videoCodec: VideoCodec
   bitRate: number | null
   selected: boolean
 }
@@ -16,8 +20,8 @@ export interface OutputSettings {
   destination: 'same' | 'custom'
   customPath: string
   pattern: string
-  videoCodec: string
-  outputExtension: string
+  videoCodec: VideoCodec
+  outputExtension: OutputExtension
 }
 
 export interface LutFile {
@@ -32,7 +36,7 @@ export interface ExportVideo {
   path: string
   cameraKey: string
   duration: number
-  videoCodec: string
+  videoCodec: VideoCodec
   bitRate: number | null
 }
 
@@ -40,8 +44,8 @@ export interface ExportOutputSettings {
   destination: 'same' | 'custom'
   customPath: string
   pattern: string
-  videoCodec: string
-  outputExtension: string
+  videoCodec: VideoCodec
+  outputExtension: OutputExtension
 }
 
 export interface ExportJob {
@@ -59,5 +63,5 @@ export interface ExportProgress {
   time: string | null
   speed: string | null
   percent: number | null
-  status: 'processing' | 'done' | 'error' | 'complete'
+  status: ExportStatus
 }

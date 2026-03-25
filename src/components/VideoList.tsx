@@ -1,10 +1,10 @@
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'solid-icons/ai'
 import { createEffect, For, Show, type Component } from 'solid-js'
-import type { VideoFile } from '../types'
+import type { ExportStatus, VideoFile } from '../types'
 import { formatFramerate, formatResolution, formatSize } from '../utils'
 
 interface FileProgressState {
-  state: string
+  state: ExportStatus
   percent: number
 }
 

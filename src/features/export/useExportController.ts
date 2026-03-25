@@ -1,12 +1,12 @@
 import { createMemo, createSignal, onCleanup, onMount } from 'solid-js'
 import type { DropdownOption } from '../../components/Dropdown'
-import type { ExportJob, ExportProgress, OutputSettings, VideoFile } from '../../types'
+import type { ExportJob, ExportProgress, ExportStatus, OutputSettings, VideoFile } from '../../types'
 import { useSettings } from '../../stores/settings'
 import { checkOverwrite, startExport as invokeStartExport } from '../../services/tauriApi'
 import { subscribeToExportProgress } from '../../services/events'
 
 export interface FileProgressEntry {
-  state: string
+  state: ExportStatus
   percent: number
 }
 

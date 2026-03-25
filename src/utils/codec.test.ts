@@ -28,13 +28,13 @@ describe('getExtForCodec', () => {
   })
 
   it('returns same-as-source fallback for unknown codec', () => {
-    const result = getExtForCodec('unknown')
+    const result = getExtForCodec('unknown' as 'h264')
     expect(result.default).toBe('same')
     expect(result.options).toEqual([{ label: 'same as source', value: 'same' }])
   })
 
   it('returns same-as-source fallback for empty string', () => {
-    const result = getExtForCodec('')
+    const result = getExtForCodec('' as 'h264')
     expect(result.default).toBe('same')
   })
 

@@ -1,4 +1,9 @@
-export const CODEC_EXT_OPTIONS: Record<string, { options: { label: string; value: string }[]; default: string }> = {
+import type { OutputExtension, VideoCodec } from '../types'
+
+export const CODEC_EXT_OPTIONS: Record<
+  VideoCodec,
+  { options: { label: string; value: OutputExtension }[]; default: OutputExtension }
+> = {
   h264: {
     options: [
       { label: 'mp4', value: 'mp4' },
@@ -21,14 +26,20 @@ export const CODEC_EXT_OPTIONS: Record<string, { options: { label: string; value
       { label: 'mkv', value: 'mkv' }
     ],
     default: 'mov'
+  },
+  same: {
+    options: [
+      { label: 'same as source', value: 'same' }
+    ],
+    default: 'same'
   }
 }
 
-const SAME_SOURCE_EXT: { label: string; value: string }[] = [
+const SAME_SOURCE_EXT: { label: string; value: OutputExtension }[] = [
   { label: 'same as source', value: 'same' }
 ]
 
-export function getExtForCodec(codec: string) {
-  return CODEC_EXT_OPTIONS[codec] ?? { options: SAME_SOURCE_EXT, default: 'same' }
+export function getExtForCodec(codec: VideoCodec) {
+  return CODEC_EXT_OPTIONS[codec] ?? { options: SAME_SOURCE_EXT, default: 'same' as OutputExtension }
 }
 
