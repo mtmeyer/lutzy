@@ -15,6 +15,7 @@ interface LutAssignmentProps {
   onOutputChange: (settings: OutputSettings) => void
   selections: Record<string, DropdownOption | null>
   onSelectionChange: (cameraKey: string, option: DropdownOption | null) => void
+  perCameraLut: boolean
 }
 
 const LutAssignment: Component<LutAssignmentProps> = props => {
@@ -68,27 +69,45 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
             </button>
           </div>
           <div class="flex flex-col gap-3">
-            <For each={props.cameras}>
-              {camera => (
-                <div class="rounded-lg border border-border bg-surface">
-                  <div class="border-b border-border px-3 py-2 text-sm font-medium text-heading">
-                    {camera.display}
-                  </div>
-                  <div class="p-3">
-                    <div class="flex items-center gap-2">
-                      <Dropdown
-                        options={dropdownOptions()}
-                        value={props.selections[camera.key] ?? null}
-                        onChange={option => props.onSelectionChange(camera.key, option)}
-                        placeholder="Select a LUT…"
-                        disabled={dropdownOptions().length === 0}
-                      />
+            <Show when={props.perCameraLut}>
+              <For each={props.cameras}>
+                {camera => (
+                  <div class="rounded-lg border border-border bg-surface">
+                    <div class="border-b border-border px-3 py-2 text-sm font-medium text-heading">
+                      {camera.display}
                     </div>
-                    <div class="mt-2 text-xs text-text-3">last used</div>
+                    <div class="p-3">
+                      <div class="flex items-center gap-2">
+                        <Dropdown
+                          options={dropdownOptions()}
+                          value={props.selections[camera.key] ?? null}
+                          onChange={option => props.onSelectionChange(camera.key, option)}
+                          placeholder="Select a LUT…"
+                          disabled={dropdownOptions().length === 0}
+                        />
+                      </div>
+                      <div class="mt-2 text-xs text-text-3">last used</div>
+                    </div>
                   </div>
+                )}
+              </For>
+            </Show>
+            <Show when={!props.perCameraLut}>
+              <div class="rounded-lg border border-border bg-surface">
+                <div class="border-b border-border px-3 py-2 text-sm font-medium text-heading">
+                  Apply to all videos
                 </div>
-              )}
-            </For>
+                <div class="p-3">
+                  <Dropdown
+                    options={dropdownOptions()}
+                    value={props.selections['all'] ?? null}
+                    onChange={option => props.onSelectionChange('all', option)}
+                    placeholder="Select a LUT…"
+                    disabled={dropdownOptions().length === 0}
+                  />
+                </div>
+              </div>
+            </Show>
           </div>
         </div>
       </Show>
