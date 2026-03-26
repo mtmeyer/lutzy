@@ -96,6 +96,25 @@ On directory scan, each detected camera key is looked up. If a record exists, th
 
 ---
 
+## Multi-LUT Chain Support
+
+A new table for future multi-LUT support is defined but not yet connected to the frontend:
+
+```sql
+CREATE TABLE camera_lut_chain (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    camera_key  TEXT NOT NULL,
+    lut_id      INTEGER NOT NULL REFERENCES luts(id) ON DELETE CASCADE,
+    position    INTEGER NOT NULL,
+    last_used   DATETIME NOT NULL,
+    UNIQUE(camera_key, position)
+);
+```
+
+This allows multiple LUTs to be applied in sequence per camera, each with an ordinal position. The `ON DELETE CASCADE` ensures chain entries are removed when a LUT is deleted from the library. When this feature is implemented, it will supersede the single `lut_path` in `camera_luts`.
+
+---
+
 ## FFmpeg Pipeline
 
 LUT application uses the `lut3d` filter with a `.cube` file:

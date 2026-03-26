@@ -46,36 +46,40 @@ fn migrate(conn: &Connection) -> Result<()> {
 
     if version < 1 {
         conn.execute_batch(
-            "CREATE TABLE camera_luts (
-                camera_key  TEXT PRIMARY KEY,
-                lut_path    TEXT NOT NULL,
-                last_used   TEXT NOT NULL DEFAULT (datetime('now'))
-            );",
-        )?;
-        conn.pragma_update(None, "user_version", 1)?;
-    }
-
-    if version < 2 {
-        conn.execute_batch(
-            "CREATE TABLE luts (
+            "
+            CREATE TABLE luts (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 filename    TEXT NOT NULL,
                 label       TEXT NOT NULL,
                 stored_path TEXT NOT NULL UNIQUE,
                 added_at    TEXT NOT NULL DEFAULT (datetime('now'))
-            );",
-        )?;
-        conn.pragma_update(None, "user_version", 2)?;
-    }
+            );
 
-    if version < 3 {
-        conn.execute_batch(
-            "CREATE TABLE settings (
+            CREATE TABLE camera_luts (
+                camera_key  TEXT PRIMARY KEY,
+                lut_path    TEXT NOT NULL,
+                last_used   TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE camera_lut_chain (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                camera_key  TEXT NOT NULL,
+                lut_id      INTEGER NOT NULL REFERENCES luts(id) ON DELETE CASCADE,
+                position    INTEGER NOT NULL,
+                last_used   TEXT NOT NULL DEFAULT (datetime('now')),
+                UNIQUE(camera_key, position)
+            );
+
+            CREATE TABLE settings (
                 key   TEXT PRIMARY KEY,
                 value TEXT NOT NULL
-            );",
+            );
+            
+            PRAGMA foreign_keys = ON;
+            
+            ",
         )?;
-        conn.pragma_update(None, "user_version", 3)?;
+        conn.pragma_update(None, "user_version", 1)?;
     }
 
     Ok(())
@@ -112,6 +116,54 @@ pub fn delete_camera_luts_by_lut_path(conn: &Connection, lut_path: &str) -> Resu
     conn.execute(
         "DELETE FROM camera_luts WHERE lut_path = ?1",
         params![lut_path],
+    )?;
+    Ok(())
+}
+
+// -- camera_lut_chain CRUD (future: multi-LUT support) --
+
+pub fn set_lut_chain(
+    conn: &Connection,
+    camera_key: &str,
+    lut_id: i64,
+    position: i32,
+) -> Result<()> {
+    conn.execute(
+        "INSERT INTO camera_lut_chain (camera_key, lut_id, position, last_used)
+         VALUES (?1, ?2, ?3, datetime('now'))
+         ON CONFLICT(camera_key, position) DO UPDATE SET
+            lut_id = excluded.lut_id,
+            last_used = excluded.last_used",
+        params![camera_key, lut_id, position],
+    )?;
+    Ok(())
+}
+
+pub fn get_camera_lut_chain(conn: &Connection, camera_key: &str) -> Result<Vec<(i64, i32)>> {
+    let mut stmt = conn.prepare(
+        "SELECT lut_id, position FROM camera_lut_chain 
+         WHERE camera_key = ?1 ORDER BY position ASC",
+    )?;
+    let rows = stmt.query_map(params![camera_key], |row| Ok((row.get(0)?, row.get(1)?)))?;
+    let mut results = Vec::new();
+    for row in rows {
+        results.push(row?);
+    }
+    Ok(results)
+}
+
+pub fn delete_lut_from_chains(conn: &Connection, lut_id: i64) -> Result<()> {
+    conn.execute(
+        "DELETE FROM camera_lut_chain WHERE lut_id = ?1",
+        params![lut_id],
+    )?;
+    Ok(())
+}
+
+pub fn clear_camera_lut_chain(conn: &Connection, camera_key: &str) -> Result<()> {
+    conn.execute(
+        "DELETE FROM camera_lut_chain WHERE camera_key = ?1",
+        params![camera_key],
     )?;
     Ok(())
 }
