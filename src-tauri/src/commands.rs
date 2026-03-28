@@ -104,10 +104,10 @@ pub fn delete_lut(id: i64, app: AppHandle) -> Result<(), String> {
         db::delete_camera_luts_by_lut_path(&conn, path).map_err(|e| e.to_string())?;
 
         // Clear global LUT setting if it matches the deleted LUT
-        if let Ok(Some(global_lut)) = db::get_setting(&conn, db::GLOBAL_LUT_KEY) {
-            if global_lut == *path {
-                let _ = db::set_setting(&conn, db::GLOBAL_LUT_KEY, "");
-            }
+        if let Ok(Some(global_lut)) = db::get_setting(&conn, db::GLOBAL_LUT_KEY)
+            && global_lut == *path
+        {
+            let _ = db::set_setting(&conn, db::GLOBAL_LUT_KEY, "");
         }
     }
 

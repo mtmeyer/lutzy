@@ -185,10 +185,10 @@ pub fn start_export(job: ExportJob, app: AppHandle) -> Result<(), String> {
                     command.args(["-pix_fmt", "yuv420p"]);
                 }
                 // Pass source bitrate when using "same as source" to match quality
-                if job.output_settings.video_codec == "same" {
-                    if let Some(br) = video.bit_rate {
-                        command.args(["-b:v", &br.to_string()]);
-                    }
+                if job.output_settings.video_codec == "same"
+                    && let Some(br) = video.bit_rate
+                {
+                    command.args(["-b:v", &br.to_string()]);
                 }
             }
 
