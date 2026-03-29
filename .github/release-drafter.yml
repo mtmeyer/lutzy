@@ -1,0 +1,46 @@
+name-template: 'Lutzy v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: '🚀 Features'
+    label: 'feat'
+  - title: '🐛 Bug Fixes'
+    label: 'fix'
+  - title: '📄 Documentation'
+    labels:
+      - 'docs'
+      - 'documentation'
+  - title: '🔧 Maintenance'
+    labels:
+      - 'chore'
+      - 'refactor'
+      - 'test'
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\[*`]'
+
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPO/compare/$PREVIOUS_TAG...$CURRENT_TAG
+
+autolabeler:
+  - label: 'feat'
+    title:
+      - '^feat'
+  - label: 'fix'
+    title:
+      - '^fix'
+  - label: 'docs'
+    title:
+      - '^docs'
+      - '^README'
+      - '^doc'
+  - label: 'chore'
+    title:
+      - '^chore'
+      - '^build'
+      - '^ci'
+      - '^deps'

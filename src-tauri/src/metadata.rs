@@ -83,10 +83,10 @@ pub fn probe_video(path: &str) -> Result<VideoMetadata, String> {
 pub(crate) fn extract_resolution(json: &FfprobeOutput) -> String {
     if let Some(ref streams) = json.streams {
         for stream in streams {
-            if stream.codec_type.as_deref() == Some("video") {
-                if let (Some(w), Some(h)) = (stream.width, stream.height) {
-                    return format!("{}x{}", w, h);
-                }
+            if stream.codec_type.as_deref() == Some("video")
+                && let (Some(w), Some(h)) = (stream.width, stream.height)
+            {
+                return format!("{}x{}", w, h);
             }
         }
     }
@@ -96,21 +96,19 @@ pub(crate) fn extract_resolution(json: &FfprobeOutput) -> String {
 pub(crate) fn extract_framerate(json: &FfprobeOutput) -> f64 {
     if let Some(ref streams) = json.streams {
         for stream in streams {
-            if stream.codec_type.as_deref() == Some("video") {
-                if let Some(rate_str) = &stream.r_frame_rate {
-                    if let Some(rate) = parse_fraction(rate_str) {
-                        if rate > 0.0 {
-                            return rate;
-                        }
-                    }
-                }
-                if let Some(rate_str) = &stream.avg_frame_rate {
-                    if let Some(rate) = parse_fraction(rate_str) {
-                        if rate > 0.0 {
-                            return rate;
-                        }
-                    }
-                }
+            if stream.codec_type.as_deref() == Some("video")
+                && let Some(rate_str) = &stream.r_frame_rate
+                && let Some(rate) = parse_fraction(rate_str)
+                && rate > 0.0
+            {
+                return rate;
+            }
+            if stream.codec_type.as_deref() == Some("video")
+                && let Some(rate_str) = &stream.avg_frame_rate
+                && let Some(rate) = parse_fraction(rate_str)
+                && rate > 0.0
+            {
+                return rate;
             }
         }
     }
@@ -118,10 +116,10 @@ pub(crate) fn extract_framerate(json: &FfprobeOutput) -> f64 {
 }
 
 pub(crate) fn extract_duration(json: &FfprobeOutput) -> f64 {
-    if let Some(ref format) = json.format {
-        if let Some(ref dur_str) = format.duration {
-            return dur_str.parse::<f64>().unwrap_or(0.0);
-        }
+    if let Some(ref format) = json.format
+        && let Some(ref dur_str) = format.duration
+    {
+        return dur_str.parse::<f64>().unwrap_or(0.0);
     }
     0.0
 }
@@ -129,10 +127,10 @@ pub(crate) fn extract_duration(json: &FfprobeOutput) -> f64 {
 pub(crate) fn extract_video_codec(json: &FfprobeOutput) -> String {
     if let Some(ref streams) = json.streams {
         for stream in streams {
-            if stream.codec_type.as_deref() == Some("video") {
-                if let Some(ref name) = stream.codec_name {
-                    return name.to_lowercase();
-                }
+            if stream.codec_type.as_deref() == Some("video")
+                && let Some(ref name) = stream.codec_name
+            {
+                return name.to_lowercase();
             }
         }
     }
@@ -142,25 +140,21 @@ pub(crate) fn extract_video_codec(json: &FfprobeOutput) -> String {
 pub(crate) fn extract_bit_rate(json: &FfprobeOutput) -> Option<u64> {
     if let Some(ref streams) = json.streams {
         for stream in streams {
-            if stream.codec_type.as_deref() == Some("video") {
-                if let Some(ref br) = stream.bit_rate {
-                    if let Ok(val) = br.parse::<u64>() {
-                        if val > 0 {
-                            return Some(val);
-                        }
-                    }
-                }
+            if stream.codec_type.as_deref() == Some("video")
+                && let Some(ref br) = stream.bit_rate
+                && let Ok(val) = br.parse::<u64>()
+                && val > 0
+            {
+                return Some(val);
             }
         }
     }
-    if let Some(ref format) = json.format {
-        if let Some(ref br) = format.bit_rate {
-            if let Ok(val) = br.parse::<u64>() {
-                if val > 0 {
-                    return Some(val);
-                }
-            }
-        }
+    if let Some(ref format) = json.format
+        && let Some(ref br) = format.bit_rate
+        && let Ok(val) = br.parse::<u64>()
+        && val > 0
+    {
+        return Some(val);
     }
     None
 }
@@ -184,11 +178,11 @@ pub(crate) fn collect_camera_tags(
     }
 
     // 2. Overlay format-level tags (format tags take priority for same key)
-    if let Some(ref format) = json.format {
-        if let Some(ref format_tags) = format.tags {
-            for (k, v) in format_tags {
-                tags.insert(k.to_lowercase(), v.clone());
-            }
+    if let Some(ref format) = json.format
+        && let Some(ref format_tags) = format.tags
+    {
+        for (k, v) in format_tags {
+            tags.insert(k.to_lowercase(), v.clone());
         }
     }
 

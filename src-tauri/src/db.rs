@@ -122,6 +122,7 @@ pub fn delete_camera_luts_by_lut_path(conn: &Connection, lut_path: &str) -> Resu
 
 // -- camera_lut_chain CRUD (future: multi-LUT support) --
 
+#[allow(dead_code)]
 pub fn set_lut_chain(
     conn: &Connection,
     camera_key: &str,
@@ -139,6 +140,7 @@ pub fn set_lut_chain(
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn get_camera_lut_chain(conn: &Connection, camera_key: &str) -> Result<Vec<(i64, i32)>> {
     let mut stmt = conn.prepare(
         "SELECT lut_id, position FROM camera_lut_chain 
@@ -152,6 +154,7 @@ pub fn get_camera_lut_chain(conn: &Connection, camera_key: &str) -> Result<Vec<(
     Ok(results)
 }
 
+#[allow(dead_code)]
 pub fn delete_lut_from_chains(conn: &Connection, lut_id: i64) -> Result<()> {
     conn.execute(
         "DELETE FROM camera_lut_chain WHERE lut_id = ?1",
@@ -160,6 +163,7 @@ pub fn delete_lut_from_chains(conn: &Connection, lut_id: i64) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn clear_camera_lut_chain(conn: &Connection, camera_key: &str) -> Result<()> {
     conn.execute(
         "DELETE FROM camera_lut_chain WHERE camera_key = ?1",
