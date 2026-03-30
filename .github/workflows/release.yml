@@ -2,7 +2,6 @@ name: Release
 
 on:
   push:
-    branches: [main]
     tags:
       - 'v*'
 
@@ -10,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     name: Build (${{ matrix.platform }})
     runs-on: ${{ matrix.platform }}
     strategy:
@@ -19,16 +18,16 @@ jobs:
         include:
           - platform: macos-latest
             target: aarch64-apple-darwin
-            args: ''
+            artifact_suffix: macos-arm64
           - platform: macos-latest
             target: x86_64-apple-darwin
-            args: ''
+            artifact_suffix: macos-x64
           - platform: windows-latest
             target: ''
-            args: ''
+            artifact_suffix: windows
           - platform: ubuntu-22.04
             target: ''
-            args: ''
+            artifact_suffix: linux
 
     steps:
       - name: Checkout
@@ -79,3 +78,33 @@ jobs:
           releaseDraft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
           releasePreRelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
           args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-files-${{ matrix.artifact_suffix }}
+          path: |
+            src-tauri/target/release/bundle/**
+          retention-days: 5
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          draft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
