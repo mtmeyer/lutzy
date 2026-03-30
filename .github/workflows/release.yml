@@ -19,15 +19,22 @@ jobs:
           - platform: macos-latest
             target: aarch64-apple-darwin
             artifact_suffix: macos-arm64
+            artifact_path: src-tauri/target/release/bundle/dmg
           - platform: macos-latest
             target: x86_64-apple-darwin
             artifact_suffix: macos-x64
+            artifact_path: src-tauri/target/release/bundle/dmg
           - platform: windows-latest
             target: ''
             artifact_suffix: windows
+            artifact_path: src-tauri/target/release/bundle/msi
           - platform: ubuntu-22.04
             target: ''
             artifact_suffix: linux
+            artifact_path: |
+              src-tauri/target/release/bundle/appimage/*.AppImage
+              src-tauri/target/release/bundle/deb/*.deb
+              src-tauri/target/release/bundle/rpm/*.rpm
 
     steps:
       - name: Checkout
@@ -68,23 +75,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: 'Lutzy v__VERSION__'
-          releaseBody: |
-            ## Downloads
-            - macOS (Apple Silicon): `.dmg`
-            - macOS (Intel): `.dmg`
-            - Windows: `.msi`
-            - Linux: `.AppImage` / `.deb`
-          releaseDraft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-          releasePreRelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
           args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+          createRelease: false
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-files-${{ matrix.artifact_suffix }}
-          path: |
-            src-tauri/target/release/bundle/**
+          path: ${{ matrix.artifact_path }}
           retention-days: 5
 
   release:
@@ -101,9 +99,10 @@ jobs:
           path: artifacts
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/*
+          files: |
+            artifacts/**/*
           draft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
         env:
