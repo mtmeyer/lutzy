@@ -26,7 +26,7 @@ const WelcomeScreen: Component<WelcomeScreenProps> = props => {
 
   return (
     <div class="flex h-screen flex-col items-center justify-center bg-surface-2 select-none">
-      <h1 class="text-4xl font-semibold tracking-tight text-heading">Flut</h1>
+      <h1 class="text-4xl font-semibold tracking-tight text-heading">Lutzy</h1>
       <p class="mt-2 text-sm text-text-3">Batch LUT applicator for video files</p>
       <button
         onClick={pickDirectory}
@@ -35,7 +35,6 @@ const WelcomeScreen: Component<WelcomeScreenProps> = props => {
       >
         {loading() ? 'Scanning…' : 'Select Folder'}
       </button>
-      <p class="mt-3 text-xs text-text-3">or drag &amp; drop a folder here</p>
     </div>
   )
 }
