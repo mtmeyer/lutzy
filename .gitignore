@@ -134,6 +134,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+### Tauri sidecar binaries ###
+src-tauri/binaries/
+
 ### Node Patch ###
 # Serverless Webpack directories
 .webpack/
