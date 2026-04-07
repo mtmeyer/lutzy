@@ -69,7 +69,7 @@ download_macos_intel() {
     local zip="$TMP_DIR/ffmpeg-macos-intel.zip"
     local inner="$TMP_DIR/ffmpeg-macos-intel"
 
-    curl -fsSL "https://evermeet.cx/ffmpeg-8.1.zip" -o "$zip"
+    curl -fsSL "https://www.osxexperts.net/ffmpeg80.zip" -o "$zip"
     unzip -qo "$zip" -d "$inner"
     local ffmpeg_bin
     ffmpeg_bin=$(find "$inner" -name "ffmpeg" -type f | head -1)
@@ -79,7 +79,7 @@ download_macos_intel() {
     rm -rf "$inner" "$zip"
 
     echo "    Downloading ffprobe for macOS x86_64..."
-    curl -fsSL "https://evermeet.cx/ffprobe-8.1.zip" -o "$zip"
+    curl -fsSL "https://www.osxexperts.net/ffprobe80.zip" -o "$zip"
     unzip -qo "$zip" -d "$inner"
     local ffprobe_bin
     ffprobe_bin=$(find "$inner" -name "ffprobe" -type f | head -1)
