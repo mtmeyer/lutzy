@@ -36,14 +36,18 @@ download_macos_arm() {
     curl -fsSL "$url" -o "$zip"
     local inner="$TMP_DIR/ffmpeg-macos-arm"
     unzip -qo "$zip" -d "$inner"
-    cp "$inner/ffmpeg" "$BINARIES_DIR/ffmpeg-aarch64-apple-darwin"
+    local ffmpeg_bin
+    ffmpeg_bin=$(find "$inner" -name "ffmpeg" -type f | head -1)
+    cp "$ffmpeg_bin" "$BINARIES_DIR/ffmpeg-aarch64-apple-darwin"
     chmod +x "$BINARIES_DIR/ffmpeg-aarch64-apple-darwin"
     rm -rf "$inner" "$zip"
 
     echo "    Downloading ffprobe for macOS aarch64..."
     curl -fsSL "https://www.osxexperts.net/ffprobe${FFMPEG_VERSION//./}arm.zip" -o "$zip"
     unzip -qo "$zip" -d "$inner"
-    cp "$inner/ffprobe" "$BINARIES_DIR/ffprobe-aarch64-apple-darwin"
+    local ffprobe_bin
+    ffprobe_bin=$(find "$inner" -name "ffprobe" -type f | head -1)
+    cp "$ffprobe_bin" "$BINARIES_DIR/ffprobe-aarch64-apple-darwin"
     chmod +x "$BINARIES_DIR/ffprobe-aarch64-apple-darwin"
     rm -rf "$inner" "$zip"
     echo "    Done."
@@ -57,14 +61,18 @@ download_macos_intel() {
     curl -fsSL "$url" -o "$zip"
     local inner="$TMP_DIR/ffmpeg-macos-intel"
     unzip -qo "$zip" -d "$inner"
-    cp "$inner/ffmpeg" "$BINARIES_DIR/ffmpeg-x86_64-apple-darwin"
+    local ffmpeg_bin
+    ffmpeg_bin=$(find "$inner" -name "ffmpeg" -type f | head -1)
+    cp "$ffmpeg_bin" "$BINARIES_DIR/ffmpeg-x86_64-apple-darwin"
     chmod +x "$BINARIES_DIR/ffmpeg-x86_64-apple-darwin"
     rm -rf "$inner" "$zip"
 
     echo "    Downloading ffprobe for macOS x86_64..."
     curl -fsSL "https://evermeet.cx/ffprobe/getrelease/zip" -o "$zip"
     unzip -qo "$zip" -d "$inner"
-    cp "$inner/ffprobe" "$BINARIES_DIR/ffprobe-x86_64-apple-darwin"
+    local ffprobe_bin
+    ffprobe_bin=$(find "$inner" -name "ffprobe" -type f | head -1)
+    cp "$ffprobe_bin" "$BINARIES_DIR/ffprobe-x86_64-apple-darwin"
     chmod +x "$BINARIES_DIR/ffprobe-x86_64-apple-darwin"
     rm -rf "$inner" "$zip"
     echo "    Done."
