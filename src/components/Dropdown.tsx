@@ -28,7 +28,7 @@ const Dropdown: Component<DropdownProps> = props => {
       itemComponent={itemProps => (
         <Select.Item
           item={itemProps.item}
-          class="flex cursor-pointer items-center justify-between rounded-sm px-2 py-1.5 text-sm text-body outline-none transition-colors hover:bg-surface-3 data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent"
+          class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm text-body outline-none transition-colors hover:bg-surface-hover data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent"
         >
           <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
           <Select.ItemIndicator class="text-accent">
@@ -48,7 +48,7 @@ const Dropdown: Component<DropdownProps> = props => {
       )}
     >
       <Select.Trigger
-        class="flex w-full items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-1.5 text-sm text-body transition-colors hover:bg-surface-3 focus:border-accent focus:outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
+        class="flex w-full items-center justify-between rounded-lg bg-surface-hover px-3 py-2 text-sm text-body transition-colors hover:bg-surface-3 focus:ring-2 focus:ring-accent/30 focus:outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40"
         aria-label="Dropdown"
       >
         <Select.Value<DropdownOption>>
@@ -63,7 +63,7 @@ const Dropdown: Component<DropdownProps> = props => {
         </Select.Value>
         <Select.Icon>
           <svg
-            class="ml-2 size-3.5 shrink-0 text-text-3 ui-expanded:rotate-180"
+            class="ml-2 size-3.5 shrink-0 text-text-3 ui-expanded:rotate-180 transition-transform"
             viewBox="0 0 12 12"
             fill="none"
             stroke="currentColor"
@@ -77,8 +77,8 @@ const Dropdown: Component<DropdownProps> = props => {
       </Select.Trigger>
 
       <Select.Portal>
-        <Select.Content class="z-50 rounded-md border border-border bg-surface-3 shadow-lg">
-          <Select.Listbox class="max-h-60 overflow-y-auto p-1" />
+        <Select.Content class="z-50 rounded-xl bg-surface shadow-elevated">
+          <Select.Listbox class="max-h-60 overflow-y-auto p-1.5" />
         </Select.Content>
       </Select.Portal>
     </Select>

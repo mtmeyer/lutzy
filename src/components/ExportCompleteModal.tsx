@@ -27,13 +27,12 @@ const ExportCompleteModal: Component<ExportCompleteModalProps> = props => {
   return (
     <Modal open={props.open} onOpenChange={props.onOpenChange}>
       <div class="flex flex-col items-center px-6 pt-8 pb-6">
-        {/* Icon */}
         <Show
           when={allSucceeded()}
           fallback={
-            <div class="flex size-12 items-center justify-center rounded-full bg-amber-100">
+            <div class="flex size-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <svg
-                class="size-6 text-amber-600"
+                class="size-7 text-warning"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -48,9 +47,9 @@ const ExportCompleteModal: Component<ExportCompleteModalProps> = props => {
             </div>
           }
         >
-          <div class="flex size-12 items-center justify-center rounded-full bg-green-100">
+          <div class="flex size-14 items-center justify-center rounded-full bg-accent-soft">
             <svg
-              class="size-6 text-green-600"
+              class="size-7 text-success"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -65,12 +64,10 @@ const ExportCompleteModal: Component<ExportCompleteModalProps> = props => {
           </div>
         </Show>
 
-        {/* Heading */}
-        <Dialog.Title class="mt-4 text-lg font-semibold text-heading">
+        <Dialog.Title class="mt-4 text-lg font-bold text-heading">
           {allSucceeded() ? 'Export Complete' : 'Export Finished'}
         </Dialog.Title>
 
-        {/* Summary */}
         <p class="mt-2 text-center text-sm text-text-2">
           <Show when={errorCount() === 0}>
             {successCount()} of {props.totalFiles} clip
@@ -80,19 +77,18 @@ const ExportCompleteModal: Component<ExportCompleteModalProps> = props => {
             {successCount()} of {props.totalFiles} clip
             {props.totalFiles !== 1 ? 's' : ''} exported.
             <br />
-            <span class="text-red-500">{errorCount()} failed.</span>
+            <span class="text-error">{errorCount()} failed.</span>
           </Show>
         </p>
 
-        {/* Actions */}
         <div class="mt-6 flex w-full flex-col gap-2">
           <button
             onClick={props.onNewBatch}
-            class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors"
+            class="w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white hover:bg-accent-hover active:scale-[0.98]"
           >
             Start New Batch
           </button>
-          <Dialog.CloseButton class="w-full rounded-lg px-4 py-2 text-sm font-medium text-text-2 hover:text-body transition-colors">
+          <Dialog.CloseButton class="w-full rounded-xl px-4 py-2.5 text-sm font-medium text-text-2 hover:text-body hover:bg-surface-hover">
             Close
           </Dialog.CloseButton>
         </div>

@@ -26,12 +26,15 @@ const WelcomeScreen: Component<WelcomeScreenProps> = props => {
 
   return (
     <div class="flex h-screen flex-col items-center justify-center bg-surface-2 select-none">
-      <h1 class="text-4xl font-semibold tracking-tight text-heading">Lutzy</h1>
-      <p class="mt-2 text-sm text-text-3">Batch LUT applicator for video files</p>
+      <div class="flex flex-col items-center">
+        <h1 class="text-5xl font-bold tracking-tight text-heading">Lutzy</h1>
+        <div class="mt-3 h-0.5 w-8 rounded-full bg-accent" />
+        <p class="mt-4 text-sm text-text-2">Batch LUT applicator for video files</p>
+      </div>
       <button
         onClick={pickDirectory}
         disabled={loading()}
-        class="mt-8 rounded-lg bg-accent px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-accent-hover active:bg-blue-800 disabled:opacity-50 transition-colors"
+        class="mt-10 rounded-xl bg-accent px-8 py-3.5 text-sm font-semibold text-white shadow-card hover:shadow-card-hover hover:bg-accent-hover active:scale-[0.98] disabled:opacity-50"
       >
         {loading() ? 'Scanning…' : 'Select Folder'}
       </button>

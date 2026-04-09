@@ -1,6 +1,4 @@
 {
-  "name": "lutzy",
-  "version": "2.0.0",
   "author": "mtmeyer",
   "description": "Desktop utility for batch-applying colour LUTs to video files",
   "type": "module",
@@ -18,8 +16,8 @@
     "preview": "vite preview",
     "prettier": "prettier src -c",
     "prettier:fix": "prettier src -w",
-    "eslint": "eslint src",
-    "eslint:fix": "eslint src --fix",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "typecheck": "tsc --noEmit",
     "tauri": "tauri",
     "test": "vitest",

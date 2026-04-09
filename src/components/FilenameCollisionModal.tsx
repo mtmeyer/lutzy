@@ -13,9 +13,9 @@ const FilenameCollisionModal: Component<FilenameCollisionModalProps> = props => 
   return (
     <Modal open={props.open} onOpenChange={props.onOpenChange}>
       <div class="flex flex-col items-center px-6 pt-8 pb-6">
-        <div class="flex size-12 items-center justify-center rounded-full bg-red-100">
+        <div class="flex size-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
           <svg
-            class="size-6 text-red-600"
+            class="size-7 text-error"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -29,7 +29,7 @@ const FilenameCollisionModal: Component<FilenameCollisionModalProps> = props => 
           </svg>
         </div>
 
-        <Dialog.Title class="mt-4 text-lg font-semibold text-heading">
+        <Dialog.Title class="mt-4 text-lg font-bold text-heading">
           Filename conflict
         </Dialog.Title>
 
@@ -39,7 +39,7 @@ const FilenameCollisionModal: Component<FilenameCollisionModalProps> = props => 
           collisions.
         </p>
 
-        <div class="mt-3 max-h-40 w-full overflow-y-auto rounded-md border border-border bg-surface-2 px-3 py-2">
+        <div class="mt-3 max-h-40 w-full overflow-y-auto rounded-xl bg-surface-2 px-3 py-2">
           <ul class="space-y-1">
             <For each={props.paths}>
               {path => (
@@ -54,7 +54,7 @@ const FilenameCollisionModal: Component<FilenameCollisionModalProps> = props => 
         <div class="mt-6 w-full">
           <button
             onClick={props.onDismiss}
-            class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors"
+            class="w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white hover:bg-accent-hover active:scale-[0.98]"
           >
             OK
           </button>

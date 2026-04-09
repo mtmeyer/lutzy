@@ -47,65 +47,59 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
   }
 
   return (
-    <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-8">
       <Show when={props.cameras.length === 0}>
-        <div class="flex items-center justify-center py-12 text-text-3 text-sm">
+        <div class="flex items-center justify-center py-16 text-text-3 text-sm">
           No files selected
         </div>
       </Show>
 
       <Show when={props.cameras.length > 0}>
         <div>
-          <div class="mb-3 flex items-center justify-between">
-            <div class="text-xs font-semibold uppercase tracking-wider text-text-2">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-text-2">
               LUT Assignment
-            </div>
+            </h2>
             <button
               onClick={() => void handleAddLuts()}
               disabled={adding()}
-              class="rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-body transition-colors hover:bg-surface-2 hover:text-heading disabled:opacity-50"
+              class="rounded-lg px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent-soft active:scale-[0.97] disabled:opacity-50"
             >
-              {adding() ? 'Adding…' : 'Add LUT'}
+              {adding() ? 'Adding…' : '+ Add LUT'}
             </button>
           </div>
           <div class="flex flex-col gap-3">
             <Show when={props.perCameraLut}>
               <For each={props.cameras}>
                 {camera => (
-                  <div class="rounded-lg border border-border bg-surface">
-                    <div class="border-b border-border px-3 py-2 text-sm font-medium text-heading">
+                  <div class="rounded-xl bg-surface shadow-card p-4">
+                    <div class="text-sm font-semibold text-heading mb-3">
                       {camera.display}
                     </div>
-                    <div class="p-3">
-                      <div class="flex items-center gap-2">
-                        <Dropdown
-                          options={dropdownOptions()}
-                          value={props.selections[camera.key] ?? null}
-                          onChange={option => props.onSelectionChange(camera.key, option)}
-                          placeholder="Select a LUT…"
-                          disabled={dropdownOptions().length === 0}
-                        />
-                      </div>
-                      <div class="mt-2 text-xs text-text-3">last used</div>
-                    </div>
+                    <Dropdown
+                      options={dropdownOptions()}
+                      value={props.selections[camera.key] ?? null}
+                      onChange={option => props.onSelectionChange(camera.key, option)}
+                      placeholder="Select a LUT…"
+                      disabled={dropdownOptions().length === 0}
+                    />
+                    <div class="mt-2 text-xs text-text-3">last used</div>
                   </div>
                 )}
               </For>
             </Show>
             <Show when={!props.perCameraLut}>
-              <div class="rounded-lg border border-border bg-surface">
-                <div class="border-b border-border px-3 py-2 text-sm font-medium text-heading">
+              <div class="rounded-xl bg-surface shadow-card p-4">
+                <div class="text-sm font-semibold text-heading mb-3">
                   Apply to all videos
                 </div>
-                <div class="p-3">
-                  <Dropdown
-                    options={dropdownOptions()}
-                    value={props.selections['all'] ?? null}
-                    onChange={option => props.onSelectionChange('all', option)}
-                    placeholder="Select a LUT…"
-                    disabled={dropdownOptions().length === 0}
-                  />
-                </div>
+                <Dropdown
+                  options={dropdownOptions()}
+                  value={props.selections['all'] ?? null}
+                  onChange={option => props.onSelectionChange('all', option)}
+                  placeholder="Select a LUT…"
+                  disabled={dropdownOptions().length === 0}
+                />
               </div>
             </Show>
           </div>
@@ -114,140 +108,132 @@ const LutAssignment: Component<LutAssignmentProps> = props => {
 
       <Show when={props.cameras.length > 0}>
         <div>
-          <div class="mb-3 text-xs font-semibold uppercase tracking-wider text-text-2">
+          <h2 class="mb-4 text-xs font-bold uppercase tracking-widest text-text-2">
             Output
-          </div>
-          <div class="rounded-lg border border-border bg-surface">
-            <div class="divide-y divide-border">
-              <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-text-2">Destination</span>
-                <div class="w-40">
-                  <Dropdown
-                    options={[
-                      { label: 'Same as source', value: 'same' },
-                      { label: 'Custom folder', value: 'custom' }
-                    ]}
-                    value={
-                      props.outputSettings.destination === 'custom'
-                        ? { label: 'Custom folder', value: 'custom' }
-                        : { label: 'Same as source', value: 'same' }
-                    }
-                    onChange={option => {
-                      const dest = option?.value ?? 'same'
-                      props.onOutputChange({
-                        ...props.outputSettings,
-                        destination: dest as 'same' | 'custom',
-                        customPath:
-                          dest === 'custom' ? props.outputSettings.customPath : ''
+          </h2>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="col-span-2 rounded-xl bg-surface shadow-card p-4">
+              <label class="text-xs font-semibold text-text-2 mb-2 block">Destination</label>
+              <Dropdown
+                options={[
+                  { label: 'Same as source', value: 'same' },
+                  { label: 'Custom folder', value: 'custom' }
+                ]}
+                value={
+                  props.outputSettings.destination === 'custom'
+                    ? { label: 'Custom folder', value: 'custom' }
+                    : { label: 'Same as source', value: 'same' }
+                }
+                onChange={option => {
+                  const dest = option?.value ?? 'same'
+                  props.onOutputChange({
+                    ...props.outputSettings,
+                    destination: dest as 'same' | 'custom',
+                    customPath:
+                      dest === 'custom' ? props.outputSettings.customPath : ''
+                  })
+                }}
+              />
+              <Show when={props.outputSettings.destination === 'custom'}>
+                <div class="mt-3 flex items-center gap-2">
+                  <span
+                    class="flex-1 min-w-0 truncate text-sm text-heading"
+                    title={props.outputSettings.customPath || 'No folder selected'}
+                  >
+                    {props.outputSettings.customPath
+                      ? folderLabel(props.outputSettings.customPath)
+                      : 'No folder selected'}
+                  </span>
+                  <button
+                    onClick={() => {
+                      void open({
+                        directory: true,
+                        multiple: false,
+                        title: 'Select output folder'
+                      }).then(selected => {
+                        if (selected) {
+                          props.onOutputChange({
+                            ...props.outputSettings,
+                            customPath: selected
+                          })
+                        }
                       })
                     }}
-                  />
-                </div>
-              </div>
-              <Show when={props.outputSettings.destination === 'custom'}>
-                <div class="flex items-center justify-between px-3 py-2.5">
-                  <span class="text-sm text-text-2">Folder</span>
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="max-w-[140px] truncate text-sm text-heading"
-                      title={props.outputSettings.customPath || 'No folder selected'}
-                    >
-                      {props.outputSettings.customPath
-                        ? folderLabel(props.outputSettings.customPath)
-                        : 'No folder selected'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        void open({
-                          directory: true,
-                          multiple: false,
-                          title: 'Select output folder'
-                        }).then(selected => {
-                          if (selected) {
-                            props.onOutputChange({
-                              ...props.outputSettings,
-                              customPath: selected
-                            })
-                          }
-                        })
-                      }}
-                      class="shrink-0 rounded-md border border-border bg-surface px-2 py-1 text-xs font-medium text-body transition-colors hover:bg-surface-2 hover:text-heading"
-                    >
-                      Browse
-                    </button>
-                  </div>
+                    class="shrink-0 rounded-lg bg-surface-hover px-3 py-1.5 text-xs font-medium text-body hover:bg-surface-3"
+                  >
+                    Browse
+                  </button>
                 </div>
               </Show>
-              <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-text-2">Filename</span>
-                <InputField
-                  value={props.outputSettings.pattern}
-                  onChange={value =>
+            </div>
+
+            <div class="rounded-xl bg-surface shadow-card p-4">
+              <label class="text-xs font-semibold text-text-2 mb-2 block">Filename</label>
+              <InputField
+                value={props.outputSettings.pattern}
+                onChange={value =>
+                  props.onOutputChange({
+                    ...props.outputSettings,
+                    pattern: value
+                  })
+                }
+                error={
+                  props.hasFilenameCollision
+                    ? 'Will overwrite source files'
+                    : undefined
+                }
+              />
+            </div>
+
+            <div class="rounded-xl bg-surface shadow-card p-4">
+              <label class="text-xs font-semibold text-text-2 mb-2 block">Codec</label>
+              <Dropdown
+                options={[
+                  { label: 'Same as source', value: 'same' },
+                  { label: 'H.264', value: 'h264' },
+                  { label: 'H.265', value: 'h265' },
+                  { label: 'ProRes', value: 'prores' }
+                ]}
+                value={(() => {
+                  const codec = props.outputSettings.videoCodec
+                  return codec && codec !== 'same'
+                    ? { label: codec.toUpperCase(), value: codec }
+                    : { label: 'Same as source', value: 'same' }
+                })()}
+                onChange={option => {
+                  const codec = (option?.value as VideoCodec) ?? 'same'
+                  const extInfo = getExtForCodec(codec)
+                  props.onOutputChange({
+                    ...props.outputSettings,
+                    videoCodec: codec,
+                    outputExtension: extInfo.default
+                  })
+                }}
+                placeholder="Same as source"
+              />
+            </div>
+
+            <Show when={props.outputSettings.videoCodec !== 'same'}>
+              <div class="rounded-xl bg-surface shadow-card p-4">
+                <label class="text-xs font-semibold text-text-2 mb-2 block">Format</label>
+                <Dropdown
+                  options={getExtForCodec(props.outputSettings.videoCodec).options}
+                  value={(() => {
+                    const codec = props.outputSettings.videoCodec
+                    const ext = props.outputSettings.outputExtension || 'same'
+                    const info = getExtForCodec(codec)
+                    const found = info.options.find(o => o.value === ext)
+                    return found ?? info.options[0]
+                  })()}
+                  onChange={option =>
                     props.onOutputChange({
                       ...props.outputSettings,
-                      pattern: value
+                      outputExtension: (option?.value as OutputExtension) ?? 'same'
                     })
-                  }
-                  class="w-40 text-right"
-                  error={
-                    props.hasFilenameCollision
-                      ? 'Will overwrite source files'
-                      : undefined
                   }
                 />
               </div>
-              <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-text-2">Codec</span>
-                <div class="w-40">
-                  <Dropdown
-                    options={[
-                      { label: 'Same as source', value: 'same' },
-                      { label: 'H.264', value: 'h264' },
-                      { label: 'H.265', value: 'h265' },
-                      { label: 'ProRes', value: 'prores' }
-                    ]}
-                    value={(() => {
-                      const codec = props.outputSettings.videoCodec
-                      return codec && codec !== 'same'
-                        ? { label: codec.toUpperCase(), value: codec }
-                        : { label: 'Same as source', value: 'same' }
-                    })()}
-                    onChange={option => {
-                      const codec = (option?.value as VideoCodec) ?? 'same'
-                      const extInfo = getExtForCodec(codec)
-                      props.onOutputChange({
-                        ...props.outputSettings,
-                        videoCodec: codec,
-                        outputExtension: extInfo.default
-                      })
-                    }}
-                    placeholder="Same as source"
-                  />
-                </div>
-              </div>
-              <div class="flex items-center justify-between px-3 py-2.5">
-                <span class="text-sm text-text-2">Format</span>
-                <div class="w-40">
-                  <Dropdown
-                    options={getExtForCodec(props.outputSettings.videoCodec).options}
-                    value={(() => {
-                      const codec = props.outputSettings.videoCodec
-                      const ext = props.outputSettings.outputExtension || 'same'
-                      const info = getExtForCodec(codec)
-                      const found = info.options.find(o => o.value === ext)
-                      return found ?? info.options[0]
-                    })()}
-                    onChange={option =>
-                      props.onOutputChange({
-                        ...props.outputSettings,
-                        outputExtension: (option?.value as OutputExtension) ?? 'same'
-                      })
-                    }
-                    disabled={props.outputSettings.videoCodec === 'same'}
-                  />
-                </div>
-              </div>
-            </div>
+            </Show>
           </div>
         </div>
       </Show>
