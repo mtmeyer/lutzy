@@ -7,7 +7,6 @@ interface WelcomeScreenProps {
 
 const WelcomeScreen: Component<WelcomeScreenProps> = props => {
   const [loading, setLoading] = createSignal(false)
-  const [dragOver, setDragOver] = createSignal(false)
 
   const pickDirectory = () => {
     if (loading()) return
