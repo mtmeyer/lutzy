@@ -30,14 +30,14 @@ const InputField: Component<InputFieldProps> = props => {
       <TextField.Input
         type={props.type ?? 'text'}
         placeholder={props.placeholder}
-        class="w-full rounded border border-border bg-surface-2 px-2 py-1 text-sm text-body placeholder:text-text-3 focus:border-accent focus:outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
+        class="w-full rounded-lg bg-surface-hover px-3 py-2 text-sm text-body placeholder:text-text-3 focus:ring-2 focus:ring-accent/30 focus:outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40"
       />
       {props.description && (
         <TextField.Description class="text-xs text-text-3">
           {props.description}
         </TextField.Description>
       )}
-      <TextField.ErrorMessage class="text-xs text-red-500">
+      <TextField.ErrorMessage class="text-xs text-error">
         {props.error}
       </TextField.ErrorMessage>
     </TextField>

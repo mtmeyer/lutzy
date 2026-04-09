@@ -25,7 +25,6 @@ import { onCleanup, onMount, createEffect } from 'solid-js'
 const ThemeApplier: Component<{ children: JSX.Element }> = props => {
   const { settings } = useSettings()
 
-  // Apply dark class and listen for system preference changes
   onMount(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
 
@@ -34,16 +33,13 @@ const ThemeApplier: Component<{ children: JSX.Element }> = props => {
       document.documentElement.classList.toggle('dark', isDark)
     }
 
-    // Apply immediately
     applyTheme()
 
-    // Re-apply when settings change (createEffect tracks reactive reads)
     createEffect(() => {
       void settings.theme
       applyTheme()
     })
 
-    // Listen for system preference changes
     const handler = () => {
       if (settings.theme === 'system') applyTheme()
     }
@@ -66,7 +62,7 @@ const AppContent: Component = () => {
     outputExtension: 'same'
   })
   const [showSettings, setShowSettings] = createSignal(false)
-  
+
   const exportController = useExportController({
     selectedVideos: videoBatch.selectedVideos,
     selectedCount: videoBatch.selectedCount,
@@ -99,23 +95,20 @@ const AppContent: Component = () => {
       fallback={<WelcomeScreen onSelect={handleDirectoryChange} />}
     >
       <div class="flex flex-col h-screen bg-surface-2 text-heading">
-        {/* Header */}
-        <header class="flex items-center border-b border-border bg-surface px-4 py-2">
-          <span class="text-sm font-semibold tracking-wide text-body">Lutzy</span>
+        <header class="flex items-center bg-surface px-5 py-3 shadow-card">
+          <span class="text-base font-bold tracking-tight text-heading">Lutzy</span>
           <button
             onClick={() => setShowSettings(true)}
-            class="ml-auto text-text-3 hover:text-text-2 transition-colors"
+            class="ml-auto text-text-3 hover:text-text-2 rounded-lg p-1.5 hover:bg-surface-hover"
             aria-label="Settings"
           >
             <AiOutlineSetting size={18} />
           </button>
         </header>
 
-        {/* Main area */}
         <div class="flex flex-1 min-h-0">
-          {/* Left panel */}
-          <div class="flex w-[420px] flex-col border-r border-border bg-surface">
-            <div class="border-b border-border p-3">
+          <div class="flex w-[420px] flex-col bg-surface">
+            <div class="p-3">
               <DirectoryPicker
                 directory={directory()}
                 onDirectoryChange={handleDirectoryChange}
@@ -130,14 +123,14 @@ const AppContent: Component = () => {
                 fileProgress={exportController.fileProgress()}
               />
             </div>
-            <div class="flex items-center justify-between border-t border-border px-3 py-2">
+            <div class="flex items-center justify-between px-4 py-2.5">
               <span class="text-xs text-text-2">
                 {selectedCount()} of {totalCount()} selected
               </span>
               <button
                 onClick={toggleSelectAll}
                 disabled={totalCount() === 0}
-                class="text-xs text-accent hover:text-accent-hover disabled:opacity-40 disabled:cursor-not-allowed"
+                class="text-xs text-accent font-medium hover:text-accent-hover disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {selectedCount() === totalCount() && totalCount() > 0
                   ? 'Deselect all'
@@ -146,8 +139,7 @@ const AppContent: Component = () => {
             </div>
           </div>
 
-          {/* Right panel */}
-          <div class="flex-1 min-h-0 overflow-y-auto p-4">
+          <div class="flex-1 min-h-0 overflow-y-auto p-5">
             <LutAssignment
               cameras={uniqueCameras()}
               luts={lutSelections_.luts()}
@@ -162,21 +154,18 @@ const AppContent: Component = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer class="flex items-center gap-4 border-t border-border bg-surface px-4 py-3">
-          {/* Validation warning */}
+        <footer class="flex items-center gap-4 bg-surface px-5 py-3 shadow-[0_-1px_3px_rgba(0,0,0,0.06)]">
           {missingLutCameras().length > 0 && selectedCount() > 0 && (
-            <span class="text-xs text-amber-600 shrink-0">
+            <span class="text-xs text-warning font-medium shrink-0">
               No LUT for:{' '}
               {missingLutCameras()
                 .map(c => c.display)
                 .join(', ')}
             </span>
           )}
-          {/* Progress bar */}
-          <div class="h-2 flex-1 rounded-full bg-border">
+          <div class="h-2.5 flex-1 rounded-full bg-surface-3">
             <div
-              class="h-full rounded-full bg-blue-500 transition-all"
+              class="h-full rounded-full bg-accent transition-all duration-300"
               style={{
                 width: (() => {
                   const p = exportController.exportProgress()
@@ -188,7 +177,6 @@ const AppContent: Component = () => {
               }}
             />
           </div>
-          {/* Progress text */}
           {(() => {
             const p = exportController.exportProgress()
             if (!exportController.exporting() || !p) return null
@@ -198,11 +186,10 @@ const AppContent: Component = () => {
               </span>
             )
           })()}
-          {/* Export button */}
           <button
             onClick={() => void exportController.handleExport()}
             disabled={!canExport()}
-            class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+            class="rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shrink-0 min-w-[140px] text-center"
           >
             {exportController.exporting()
               ? `Exporting… ${(exportController.exportProgress()?.fileIndex ?? 0) + 1}/${selectedCount()}`

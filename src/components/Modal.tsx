@@ -14,10 +14,10 @@ const Modal: Component<ModalProps> = props => {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-50 bg-black/40" />
+        <Dialog.Overlay class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
         <Dialog.Content class="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            class={`mx-4 w-full max-w-sm rounded-xl bg-surface shadow-xl ${merged.class}`}
+            class={`mx-4 w-full max-w-sm rounded-2xl bg-surface shadow-elevated ${merged.class}`}
           >
             {props.children}
           </div>

@@ -1,5 +1,5 @@
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'solid-icons/ai'
-import { createEffect, For, Show, type Component } from 'solid-js'
+import { For, Show, type Component } from 'solid-js'
 import type { ExportStatus, VideoFile } from '../types'
 import { formatFramerate, formatResolution, formatSize } from '../utils'
 
@@ -16,7 +16,6 @@ interface VideoListProps {
 }
 
 const VideoList: Component<VideoListProps> = props => {
-  createEffect(() => console.log(props.fileProgress))
   return (
     <div class="flex flex-col">
       <Show when={props.loading}>
@@ -37,9 +36,9 @@ const VideoList: Component<VideoListProps> = props => {
               <button
                 type="button"
                 onClick={() => props.onToggleSelect(video.path)}
-                class="flex items-start gap-2 px-3 py-2 text-left hover:bg-surface-2 border-b border-border last:border-b-0 transition-colors"
+                class="flex items-start gap-3 px-4 py-2.5 text-left hover:bg-surface-hover rounded-none transition-colors"
               >
-                <div class="mt-0.5 shrink-0 w-4 h-4 flex items-center justify-center">
+                <div class="mt-1 shrink-0 w-4 h-4 flex items-center justify-center">
                   <Show
                     when={p()}
                     fallback={
@@ -47,30 +46,39 @@ const VideoList: Component<VideoListProps> = props => {
                         type="checkbox"
                         checked={video.selected}
                         onChange={() => props.onToggleSelect(video.path)}
-                        class="rounded border-border-strong pointer-events-none"
+                        class="pointer-events-none"
                       />
                     }
                   >
                     <StatusIcon state={p().state} />
                   </Show>
                 </div>
+                <div class="shrink-0 w-12 h-8 rounded-md bg-surface-3 flex items-center justify-center mt-0.5">
+                  <svg class="size-4 text-text-3" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
                 <div class="flex-1 min-w-0">
                   <div class="text-sm font-medium text-heading truncate">
                     {video.filename}
                   </div>
-                  <div class="mt-0.5 text-xs text-text-2">
-                    {formatResolution(video.resolution)} ·{' '}
-                    {video.framerate
-                      ? `${formatFramerate(video.framerate)}fps`
-                      : '\u2014'}{' '}
-                    · {formatSize(video.fileSize)}{' '}
+                  <div class="mt-0.5 flex items-center gap-1.5 text-xs text-text-2">
+                    <span>{formatResolution(video.resolution)}</span>
+                    <span class="text-text-3">·</span>
+                    <span>
+                      {video.framerate
+                        ? `${formatFramerate(video.framerate)}fps`
+                        : '\u2014'}
+                    </span>
+                    <span class="text-text-3">·</span>
+                    <span>{formatSize(video.fileSize)}</span>
                     <CameraBadge display={video.cameraDisplay} key={video.cameraKey} />
                   </div>
                   <Show when={p()?.state === 'processing' ? p() : null}>
                     {pp => (
-                      <div class="mt-1.5 h-1 w-full rounded-full bg-border">
+                      <div class="mt-1.5 h-1 w-full rounded-full bg-surface-3">
                         <div
-                          class="h-full rounded-full bg-blue-500 transition-all"
+                          class="h-full rounded-full bg-accent transition-all duration-300"
                           style={{ width: `${Math.min(pp().percent, 100)}%` }}
                         />
                       </div>
@@ -90,10 +98,10 @@ function StatusIcon(props: { state: string }) {
   return (
     <>
       <Show when={props.state === 'done'}>
-        <AiOutlineCheckCircle class="text-green-500" />
+        <AiOutlineCheckCircle class="text-success" />
       </Show>
       <Show when={props.state === 'error' || props.state.startsWith('error:')}>
-        <AiOutlineCloseCircle class="text-red-500" />
+        <AiOutlineCloseCircle class="text-error" />
       </Show>
     </>
   )
@@ -105,7 +113,7 @@ function CameraBadge(props: { display: string; key: string }) {
     return <span class="text-text-3">[?]</span>
   }
   return (
-    <span class="rounded bg-surface-3 px-1 py-0.5 text-[10px] font-medium text-body">
+    <span class="rounded-md bg-accent-soft px-1.5 py-0.5 text-[10px] font-semibold text-accent">
       {label}
     </span>
   )
