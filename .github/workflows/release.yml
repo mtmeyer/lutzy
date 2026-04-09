@@ -15,12 +15,16 @@ jobs:
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
             args: '--target aarch64-apple-darwin'
+            ffmpeg_platform: 'macos-arm'
           - platform: 'macos-latest' # for Intel based macs.
             args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+            ffmpeg_platform: 'macos-intel'
+          - platform: 'ubuntu-22.04'
             args: ''
+            ffmpeg_platform: 'linux'
           - platform: 'windows-latest'
             args: ''
+            ffmpeg_platform: 'windows'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -44,7 +48,10 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: install frontend dependencies
-        run: yarn install # change this to npm, pnpm or bun depending on which one you use.
+        run: npm ci
+
+      - name: download ffmpeg sidecar binaries
+        run: bash scripts/download-ffmpeg.sh ${{ matrix.ffmpeg_platform }}
 
       - uses: tauri-apps/tauri-action@v0
         env:
